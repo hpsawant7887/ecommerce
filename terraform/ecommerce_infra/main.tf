@@ -29,6 +29,21 @@ module "eks_cluster" {
 
   project_name = var.project_name
   subnet_id_list = module.network_setup.subnet_id_list
-  
+  eks_cluster_sg_id = module.network_setup.eks_cluster_sg
+  eks_worker_sg_id = module.network_setup.eks_worker_nodes_sg
 }
+
+module "lb_for_eks" {
+ source = "../modules/ecommerce_lb"
+
+ vpc_id = module.network_setup.vpc_id
+ subnet_id_list = module.network_setup.subnet_id_list
+ project_name = var.project_name
+ vpc_cidr_block = var.cidr_block
+ root_domain_name = var.root_domain_name
+ eks_nodes_asg_name = module.eks_cluster.eks_nodes_asg_name
+
+}
+
+
 

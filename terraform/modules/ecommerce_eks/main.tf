@@ -7,9 +7,10 @@ resource "aws_eks_cluster" "eks_cluster" {
   # Desired Kubernetes master version
   version = "1.30"
   vpc_config {
+    security_group_ids      = [var.eks_cluster_sg_id, var.eks_worker_sg_id]
     endpoint_private_access = false
-    endpoint_public_access = true
-    subnet_ids = var.subnet_id_list  # this is of type list
+    endpoint_public_access  = true
+    subnet_ids              = var.subnet_id_list  # this is of type list
   }
 }
 
@@ -42,7 +43,7 @@ resource "aws_eks_node_group" "node_group" {
 
   # Type of Amazon Machine Image (AMI) associated with the EKS Node Group
  
-  ami_type = "AL2_x86_64"
+  ami_type = "AL2_ARM_64"
 
   # Type of capacity associated with the EKS Node Group
 
@@ -55,7 +56,7 @@ resource "aws_eks_node_group" "node_group" {
   force_update_version = false
 
   # Instance type associated with the EKS Node Group
-  instance_types = ["t3.small"]
+  instance_types = ["t4g.xlarge"]
 
   labels = {
     role = "${aws_eks_cluster.eks_cluster.id}-Node-group-role",

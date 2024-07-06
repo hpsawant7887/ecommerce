@@ -18,3 +18,8 @@ variable "project_name" {
  description = "Name of the Project"
 }
 
+variable "root_domain_name" {
+  type    = string
+  description = "root domain name"
+}
+

@@ -94,9 +94,8 @@ resource "aws_subnet" "private_subnet" {
   map_public_ip_on_launch = false
   
   tags = {
-    Name                        = "pri-sub"
+    Name                        = "pri-sub-${each.value}"
     "kubernetes.io/cluster/${var.project_name}-eks-cluster" = "shared"
-    "kubernetes.io/role/internal-elb" = 1
   }
 }
 
