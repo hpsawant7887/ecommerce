@@ -3,9 +3,9 @@ variable "vpc_id" {
  description = "VPC ID"
 }
 
-variable "subnet_id_list" {
+variable "public_subnet_id_list" {
   type        = list(string)
-  description =  "AWS Subnet ID list"
+  description =  "AWS Public Subnet ID List"
 }
 
 variable "project_name" {

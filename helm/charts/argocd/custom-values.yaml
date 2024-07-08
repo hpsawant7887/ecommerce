@@ -1,0 +1,10 @@
+global:
+  domain: argocd.demo-eshop.com
+configs:
+  params:
+    server.insecure: true
+server:
+  ingress:
+    enabled: true
+
+

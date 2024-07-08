@@ -14,4 +14,8 @@ output "eks_worker_nodes_sg" {
   value = aws_security_group.eks_nodes_sg.id
 }
 
+output "public_subnet_id_list" {
+  value = [for subnet in aws_subnet.public_subnet: subnet.id]
+}
+
 

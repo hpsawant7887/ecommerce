@@ -54,3 +54,14 @@ resource "aws_route53_record" "ecomm_a_record" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_route53_record" "argocd_a_record" {
+  zone_id = data.aws_route53_zone.ecomm_r53_zone.zone_id
+  name    = "argocd.${var.root_domain_name}"
+  type    = "A"
+  alias {
+    name                   = aws_lb.alb_for_eks.dns_name
+    zone_id                = aws_lb.alb_for_eks.zone_id
+    evaluate_target_health = false
+  }
+}

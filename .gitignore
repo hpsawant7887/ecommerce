@@ -23,3 +23,5 @@ terraform.rc
 # ignore lock
 .terraform.lock.hcl
 
+# ignore helm dependency *.tgz files
+*.tgz

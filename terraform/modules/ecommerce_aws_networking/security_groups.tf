@@ -91,6 +91,26 @@ resource "aws_security_group_rule" "worker_node_to_worker_node_ingress_coredns_u
   description       = "Allow workers nodes to communicate with each other for coredns UDP"
 }
 
+resource "aws_security_group_rule" "worker_node_ingress_controller_http" {
+  type              = "ingress"
+  from_port         = 30080
+  to_port           = 30080
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.eks_nodes_sg.id
+  description       = "Allow HTTP traffic to Nginx Ingress Controller"
+}
+
+resource "aws_security_group_rule" "worker_node_ingress_controller_https" {
+  type              = "ingress"
+  from_port         = 30443
+  to_port           = 30443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.eks_nodes_sg.id
+  description       = "Allow HTTPS traffic to Nginx Ingress Controller"
+}
+
 
 
 

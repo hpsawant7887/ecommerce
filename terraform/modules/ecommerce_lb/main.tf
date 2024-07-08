@@ -46,7 +46,7 @@ resource "aws_lb" "alb_for_eks" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.allow_http_https.id]
-  subnets            = var.subnet_id_list
+  subnets            = var.public_subnet_id_list
 
   enable_deletion_protection = true
 

@@ -14,6 +14,24 @@ resource "aws_eks_cluster" "eks_cluster" {
   }
 }
 
+
+resource "aws_launch_template" "eks_nodes_launch_template" {
+  name = "eks_nodes_launch_template"
+
+  block_device_mappings {
+    device_name = "/dev/sda"
+
+    ebs {
+      volume_size = 20
+    }
+  }
+
+  image_id = "ami-0a9cf50724f161558"
+
+  vpc_security_group_ids = [var.eks_worker_sg_id]
+
+}
+
 resource "aws_eks_node_group" "node_group" {
   # Name of the EKS Cluster
   cluster_name = aws_eks_cluster.eks_cluster.id
@@ -41,7 +59,7 @@ resource "aws_eks_node_group" "node_group" {
     min_size = 2
   }
 
-  # Type of Amazon Machine Image (AMI) associated with the EKS Node Group
+  # # Type of Amazon Machine Image (AMI) associated with the EKS Node Group
  
   ami_type = "AL2_ARM_64"
 
@@ -50,13 +68,18 @@ resource "aws_eks_node_group" "node_group" {
   capacity_type = "ON_DEMAND"
 
   # Disk size in GB for worker nodes
-  disk_size = 20
+  # disk_size = 20
 
   # Force version update if existing pods are unable to be drained due to a pod disruption budget issue
   force_update_version = false
 
   # Instance type associated with the EKS Node Group
   instance_types = ["t4g.xlarge"]
+
+  launch_template { 
+    id = aws_launch_template.eks_nodes_launch_template.id 
+    version = aws_launch_template.eks_nodes_launch_template.default_version   
+  }
 
   labels = {
     role = "${aws_eks_cluster.eks_cluster.id}-Node-group-role",

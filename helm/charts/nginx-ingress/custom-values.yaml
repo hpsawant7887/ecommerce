@@ -1,0 +1,14 @@
+controller:
+  service:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: ecommerce-service-eks-alb-1483342016.us-west-2.elb.amazonaws.com
+    type: NodePort
+    nodePorts:
+      http: 30080
+      https: 30443
+    externalTrafficPolicy: Cluster
+
+  ingressClassResource:
+    default: true
+
+

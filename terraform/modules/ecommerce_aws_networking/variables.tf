@@ -3,8 +3,8 @@ variable "cidr_block" {
  description = "CIDR Block for VPC"
 }
 
-variable "public_subnet_cidr" {
- type        = string
+variable "public_subnet_cidrs" {
+ type        = map(string)
  description = "Public Subnet CIDR value"
 }
  
@@ -17,3 +17,4 @@ variable "project_name" {
  type        = string
  description = "Name of the Project"
 }
+

@@ -12,6 +12,11 @@ locals {
       k => v
   }
 
+  pub_subnet_cidr_map = {
+    for k, v in zipmap(toset(var.public_subnet_cidr_list), local.availability_zones) :
+      k => v
+  }
+
 }
 
 module "network_setup" {
@@ -19,7 +24,7 @@ module "network_setup" {
 
   project_name = var.project_name
   cidr_block   = var.cidr_block
-  public_subnet_cidr = var.public_subnet_cidr
+  public_subnet_cidrs = local.pub_subnet_cidr_map
   private_subnet_cidrs = local.pri_subnet_cidr_map
 
 }
@@ -37,7 +42,7 @@ module "lb_for_eks" {
  source = "../modules/ecommerce_lb"
 
  vpc_id = module.network_setup.vpc_id
- subnet_id_list = module.network_setup.subnet_id_list
+ public_subnet_id_list = module.network_setup.public_subnet_id_list
  project_name = var.project_name
  vpc_cidr_block = var.cidr_block
  root_domain_name = var.root_domain_name
