@@ -50,5 +50,15 @@ module "lb_for_eks" {
 
 }
 
+data "aws_secretsmanager_secret" "rds_secret" {
+  name = "ecomm_rds_secret"
+}
+
+module "rds" {
+  source = "../modules/ecommerce_aws_rds"
+
+  rds_secret_arn = data.aws_secretsmanager_secret.rds_secret.arn
+}
+
 
 
