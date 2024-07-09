@@ -88,3 +88,64 @@ resource "aws_iam_role_policy_attachment" "eks_csi_policy" {
   role       = aws_iam_role.node_group_role.name
 
 }
+
+# OIDC Provider
+data "tls_certificate" "eks" {
+  url = aws_eks_cluster.eks_cluster.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
+  url             = aws_eks_cluster.eks_cluster.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_role" "iam_role_for_pods" {
+  name = "ecomm_iam_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Effect = "Allow",
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "iam_policy_ecomm_s3" {
+  name = "ecomm_iam_policy"
+
+  policy = jsonencode({
+    Statement = [{
+      Action = [
+        "s3:GetObject",
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ]
+      Effect   = "Allow"
+      Resource = "arn:aws:s3:::*"
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+
+resource "aws_iam_role_policy_attachment" "s3" {
+  policy_arn = aws_iam_policy.iam_policy_ecomm_s3.arn
+  role       = aws_iam_role.iam_role_for_pods.name
+}
+
+resource "aws_iam_role_policy_attachment" "dynamo" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+  role       = aws_iam_role.iam_role_for_pods.name
+}
+
+resource "aws_iam_role_policy_attachment" "rds" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+  role       = aws_iam_role.iam_role_for_pods.name
+}
