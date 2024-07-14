@@ -28,3 +28,8 @@ variable "public_subnet_cidr_list" {
  description = "list of private subnet cidrs"
 }
 
+variable "rds_private_subnet_cidrs_list" {
+ type        = list(string)
+ description = "RDS private subnet CIDRs"
+}
+

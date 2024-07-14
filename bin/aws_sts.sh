@@ -5,7 +5,7 @@ unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
 
 
-OUT=$(aws sts assume-role --role-arn arn:aws:iam::507326814593:role/Admin_Role_Terraform --role-session-name test2)
+OUT=$(aws sts assume-role --role-arn arn:aws:iam::507326814593:role/Admin_Role_Terraform --role-session-name test)
 AWS_ACCESS_KEY_ID=$(echo $OUT | jq -r '.Credentials''.AccessKeyId')
 AWS_SECRET_ACCESS_KEY=$(echo $OUT | jq -r '.Credentials''.SecretAccessKey')
 AWS_SESSION_TOKEN=$(echo $OUT | jq -r '.Credentials''.SessionToken')

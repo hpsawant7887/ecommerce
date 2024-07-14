@@ -17,6 +17,11 @@ locals {
       k => v
   }
 
+  rds_subnet_cidr_map = {
+    for k, v in zipmap(toset(var.rds_private_subnet_cidrs_list), local.availability_zones) :
+      k => v
+  }
+
 }
 
 module "network_setup" {
@@ -58,6 +63,9 @@ module "rds" {
   source = "../modules/ecommerce_aws_rds"
 
   rds_secret_arn = data.aws_secretsmanager_secret.rds_secret.arn
+  rds_private_subnet_cidrs = local.rds_subnet_cidr_map
+  vpc_id = module.network_setup.vpc_id
+  ingress_cidr_list = var.private_subnet_cidr_list
 }
 
 

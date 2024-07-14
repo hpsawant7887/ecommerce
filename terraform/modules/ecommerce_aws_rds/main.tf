@@ -7,6 +7,47 @@ data "aws_secretsmanager_secret_version" "ecomm_rds_secret_version" {
   secret_id = data.aws_secretsmanager_secret.ecomm_rds_secret.id
 }
 
+resource "aws_subnet" "rds_private_subnet" {
+  for_each = var.rds_private_subnet_cidrs
+
+  vpc_id             = var.vpc_id
+  cidr_block         = each.key
+  availability_zone  = each.value
+  map_public_ip_on_launch = false
+}
+
+
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "rds_subnet_group"
+  subnet_ids = [for subnet in aws_subnet.rds_private_subnet: subnet.id]
+
+  tags = {
+    Name = "RDS Subnet Group"
+  }
+}
+
+
+resource "aws_security_group" "rds_sg" {
+  name = "rds-sg"
+  vpc_id =  var.vpc_id
+
+  ingress {
+    from_port = 3306
+    to_port = 3306
+    protocol = "tcp"
+    cidr_blocks = var.ingress_cidr_list
+
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+
+    }
+}
+
 resource "aws_rds_cluster" "ecomm_rds_cluster" {
   cluster_identifier = "ecomm-rds-cluster"
   engine             = "aurora-mysql"
@@ -23,6 +64,8 @@ resource "aws_rds_cluster" "ecomm_rds_cluster" {
   }
   allow_major_version_upgrade = true
   skip_final_snapshot    = true
+  db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
 }
 
 resource "aws_rds_cluster_instance" "ecomm_rds_cluster_instance" {
@@ -30,4 +73,6 @@ resource "aws_rds_cluster_instance" "ecomm_rds_cluster_instance" {
   instance_class     = "db.serverless"
   engine             = aws_rds_cluster.ecomm_rds_cluster.engine
   engine_version     = aws_rds_cluster.ecomm_rds_cluster.engine_version
+  db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
+  publicly_accessible = false
 }

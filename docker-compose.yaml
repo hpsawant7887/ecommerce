@@ -1,0 +1,9 @@
+services:
+  users_service:
+    build:
+      context: .
+      dockerfile: ./users_service/Dockerfile
+      shm_size: '2gb'
+    image: hpsawant2013/users_service:latest
+    ports:
+      - "8080:8080"
