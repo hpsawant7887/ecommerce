@@ -36,6 +36,29 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RDS_MYSQL_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "users-service.fullname" . }}-configmap
+                  key: mysql_endpoint
+            - name: RDS_MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "users-service.fullname" . }}-configmap
+                  key: mysql_user
+            - name: RDS_MYSQL_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "users-service.fullname" . }}-configmap
+                  key: mysql_db_name
+            - name: RDS_MYSQL_PORT
+              value: "3306"
+            - name: RDS_MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-eshop-users-service-secret
+                  key: mysql-password
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
