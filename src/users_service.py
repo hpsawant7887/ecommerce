@@ -113,7 +113,7 @@ def register_user_action(mysqlclientObj):
         return ('Internal Server Error', 500, {})
 
 
-def health_check():
+def health_check(*args):
     if request.method != 'HEAD':
         return ('Invalid method', 400, {})
     
