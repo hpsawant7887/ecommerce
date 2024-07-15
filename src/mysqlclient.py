@@ -16,6 +16,24 @@ def database_exists(server, port, db_name, user, password):
     return result is not None
 
 
+def create_schema(server, port, user, password,schema_file):
+    conn = pymysql.connect(
+        host=server,
+        port=int(port),
+        user=user,
+        password=password)
+    
+    with open(schema_file) as fd:
+        stmts = fd.read().split(';')
+        for query in stmts:
+            q = query.replace('\n', '')
+            with conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(q)
+                    result = cursor.fetchone()
+                conn.commit()
+                
+
 class MySQLClient:
     def __init__(self, server, port, db_name, user, password):
         self.mysqlserver = server

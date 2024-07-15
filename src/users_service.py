@@ -3,7 +3,7 @@ import hashlib
 import uuid
 
 from flask import Flask, request, make_response
-from src.mysqlclient import MySQLClient, database_exists
+from src.mysqlclient import MySQLClient, database_exists, create_schema
 
 SQL_FILE = 'sql/user_schema.sql'
 
@@ -51,13 +51,9 @@ class UserService:
                 self.db_password):
             return
 
-        with open(SQL_FILE) as fd:
-            stmts = fd.read().split(';')
-            for query in stmts:
-                q = query.replace('\n', '')
-                results = self.mysqlclient.executeQuery(q)
+        create_schema(self.db_endpoint, self.db_port, self.db_user, self.db_password, SQL_FILE)
 
-        self.mysqlclient.commit()
+        # self.mysqlclient.commit()
 
     def run(self, ip, port):
         self.check_and_create_db()
