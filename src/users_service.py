@@ -114,7 +114,7 @@ def register_user_action(mysqlclientObj):
 
 
 def health_check(*args):
-    if request.method != 'HEAD':
+    if request.method != 'GET':
         return ('Invalid method', 400, {})
     
     try:
