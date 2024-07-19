@@ -20,6 +20,14 @@ if "users_service" in sys.argv:
     app = "users-service"
     sys.argv.remove('users_service')
 
+elif "onlinestore_service" in sys.argv:
+    scripts = ['bin/run_onlinestore_service.py']
+    console_scripts = [
+        "run-onlinestore-service=bin.run_onlinestore_service:main"
+    ]
+    app = "onlinestore-service"
+    sys.argv.remove('onlinestore_service')
+
 
 setup(
         name=app,
