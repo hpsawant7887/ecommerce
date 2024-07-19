@@ -68,5 +68,13 @@ module "rds" {
   ingress_cidr_list = var.private_subnet_cidr_list
 }
 
+module "dynamodb" {
+  source = "../modules/ecommerce_aws_dynamodb"
+}
+
+module "sqs" {
+  source = "../modules/ecommerce_aws_sqs"
+}
+
 
 

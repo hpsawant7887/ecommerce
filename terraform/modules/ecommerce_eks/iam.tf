@@ -145,6 +145,11 @@ resource "aws_iam_role_policy_attachment" "dynamo" {
   role       = aws_iam_role.iam_role_for_pods.name
 }
 
+resource "aws_iam_role_policy_attachment" "sqs" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+  role       = aws_iam_role.iam_role_for_pods.name
+}
+
 resource "aws_iam_role_policy_attachment" "rds" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
   role       = aws_iam_role.iam_role_for_pods.name
