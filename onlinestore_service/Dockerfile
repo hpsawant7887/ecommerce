@@ -29,6 +29,7 @@ COPY bin/run_onlinestore_service.py /opt/onlinestore_service/bin/
 COPY bin/__init__.py /opt/onlinestore_service/bin/
 COPY src/onlinestore_service.py /opt/onlinestore_service/src/
 COPY src/mysqlclient.py /opt/onlinestore_service/src/
+COPY src/sqs.py /opt/onlinestore_service/src/
 COPY src/__init__.py /opt/onlinestore_service/src/
 COPY sql/onlinestore_schema.sql /opt/onlinestore_service/sql/
 #COPY test/test_users.py /opt/users_service/test/
