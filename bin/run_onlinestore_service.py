@@ -92,7 +92,7 @@ def main():
         endpoint_name='getStoreInfo',
         handler=get_store_info)
     
-    onlinestore_service_obj.getStores(
+    onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/getStores',
         endpoint_name='getStores',
         handler=getStores)
