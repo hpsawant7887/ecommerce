@@ -7,3 +7,12 @@ services:
     image: hpsawant2013/users_service:latest
     ports:
       - "8080:8080"
+  onlinestore_service:
+    build:
+      context: .
+      dockerfile: ./onlinestore_service/Dockerfile
+      shm_size: '2gb'
+    image: hpsawant2013/onlinestore_service:latest
+    ports:
+      - "8081:8081"
+  

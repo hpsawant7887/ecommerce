@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "onlinestore-service.fullname" . }}
+  labels:
+    {{- include "onlinestore-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "onlinestore-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "onlinestore-service.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "onlinestore-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          - name: RDS_MYSQL_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: mysql_endpoint
+            - name: RDS_MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: mysql_user
+            - name: RDS_MYSQL_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: mysql_db_name
+            - name: RDS_MYSQL_AUTH_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: mysql_auth_db_name
+            - name: SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: sqs_queue_url_ordering_to_onlinestore
+            - name: RDS_MYSQL_PORT
+              value: "3306"
+            - name: RDS_MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-eshop-users-service-secret
+                  key: mysql-password
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

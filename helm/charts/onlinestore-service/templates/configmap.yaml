@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "onlinestore-service.fullname" . }}-configmap
+data:
+  mysql_endpoint: "ecomm-rds-cluster.cluster-cpc4aos0m4ie.us-west-2.rds.amazonaws.com"
+  mysql_db_name: "onlinestore"
+  mysql_user: "admin_user"
+  mysql_auth_db_name: "users"
+  sqs_queue_url_ordering_to_onlinestore: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-onlinestore"
