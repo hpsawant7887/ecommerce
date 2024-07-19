@@ -21,7 +21,7 @@ serviceAccount:
   automount: true
   # Annotations to add to the service account
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::507326814593:role/ecommerce-service-node-group-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::507326814593:role/ecomm_iam_role
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""

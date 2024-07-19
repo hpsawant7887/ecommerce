@@ -61,45 +61,45 @@ def main():
         handler=health_check)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/searchProducts',
+        endpoint='/online-store/searchProducts',
         endpoint_name='searchProducts',
         handler=search_products)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/getProductInfo',
+        endpoint='/online-store/getProductInfo',
         endpoint_name='getProductInfo',
         handler=get_product)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/createStoreOwner',
+        endpoint='/online-store/createStoreOwner',
         endpoint_name='createStoreOwner',
         handler=create_owner,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/addStore',
+        endpoint='/online-store/addStore',
         endpoint_name='addStore',
         handler=add_store,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/addProduct',
+        endpoint='/online-store/addProduct',
         endpoint_name='addProduct',
         handler=add_product,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='online-store/getStoreInfo',
+        endpoint='/online-store/getStoreInfo',
         endpoint_name='getStoreInfo',
         handler=get_store_info)
     
     onlinestore_service_obj.getStores(
-        endpoint='online-store/getStores',
+        endpoint='/online-store/getStores',
         endpoint_name='getStores',
         handler=getStores)
     
     onlinestore_service_obj.run("0.0.0.0", 8081)
     
-    
+
 if __name__ == '__main__':
     main()
