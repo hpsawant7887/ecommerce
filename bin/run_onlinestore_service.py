@@ -56,45 +56,45 @@ def main():
     t1.join()
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/healthCheck',
+        endpoint='/onlinestore-service/healthCheck',
         endpoint_name='healthCheck',
         handler=health_check)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/searchProducts',
+        endpoint='/onlinestore-service/searchProducts',
         endpoint_name='searchProducts',
         handler=search_products)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/getProductInfo',
+        endpoint='/onlinestore-service/getProductInfo',
         endpoint_name='getProductInfo',
         handler=get_product)
 
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/createStoreOwner',
+        endpoint='/onlinestore-service/createStoreOwner',
         endpoint_name='createStoreOwner',
         handler=create_owner,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/addStore',
+        endpoint='/onlinestore-service/addStore',
         endpoint_name='addStore',
         handler=add_store,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/addProduct',
+        endpoint='/onlinestore-service/addProduct',
         endpoint_name='addProduct',
         handler=add_product,
         methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
-        endpoint='/online-store/getStoreInfo',
+        endpoint='/onlinestore-service/getStoreInfo',
         endpoint_name='getStoreInfo',
         handler=get_store_info)
     
     onlinestore_service_obj.getStores(
-        endpoint='/online-store/getStores',
+        endpoint='/onlinestore-service/getStores',
         endpoint_name='getStores',
         handler=getStores)
     
