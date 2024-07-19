@@ -53,7 +53,6 @@ def main():
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, onlinestore_service_obj,))
     t1.start()
-    t1.join()
 
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/healthCheck',
@@ -99,6 +98,8 @@ def main():
         handler=getStores)
     
     onlinestore_service_obj.run("0.0.0.0", 8081)
+
+    t1.join()
     
 
 if __name__ == '__main__':
