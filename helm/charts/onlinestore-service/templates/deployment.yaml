@@ -36,7 +36,8 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          - name: RDS_MYSQL_ENDPOINT
+          env:
+            - name: RDS_MYSQL_ENDPOINT
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "onlinestore-service.fullname" . }}-configmap
