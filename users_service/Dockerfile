@@ -27,7 +27,7 @@ RUN mkdir -p /opt/users_service/sql
 COPY setup.py /opt/users_service/
 COPY bin/run_users_service.py /opt/users_service/bin/
 COPY bin/__init__.py /opt/users_service/bin/
-COPY src/users_service.py /opt/users_service/src/
+COPY src/flask_service.py /opt/users_service/src/
 COPY src/mysqlclient.py /opt/users_service/src/
 COPY src/__init__.py /opt/users_service/src/
 COPY sql/user_schema.sql /opt/users_service/sql/
