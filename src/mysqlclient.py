@@ -27,11 +27,10 @@ def create_schema(server, port, user, password,schema_file):
         stmts = fd.read().split(';')
         for query in stmts:
             q = query.replace('\n', '')
-            with conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(q)
-                    result = cursor.fetchone()
-                conn.commit()
+            with conn.cursor() as cursor:
+                cursor.execute(q)
+                result = cursor.fetchone()
+        conn.commit()
                 
 
 class MySQLClient:
