@@ -82,6 +82,7 @@ module "sqs" {
 
   sqs_queue_name_list = var.sqs_queue_name_list
   vpc_id = module.network_setup.vpc_id
+  subnet_id_list = module.network_setup.subnet_id_list
   region = "us-west-2"
   sg_id = module.network_setup.eks_worker_nodes_sg
 }

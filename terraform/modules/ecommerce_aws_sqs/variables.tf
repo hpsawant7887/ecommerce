@@ -17,3 +17,8 @@ variable "sg_id" {
  type        = string
  description = "SG for VPC endpoint"
 }
+
+variable "subnet_id_list" {
+  type        = list(string)
+  description =  "AWS Subnet ID list"
+}
