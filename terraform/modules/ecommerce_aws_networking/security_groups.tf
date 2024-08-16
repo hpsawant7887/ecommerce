@@ -111,6 +111,19 @@ resource "aws_security_group_rule" "worker_node_ingress_controller_https" {
   description       = "Allow HTTPS traffic to Nginx Ingress Controller"
 }
 
+resource "aws_security_group_rule" "worker_node_ingress_443" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  cidr_blocks              = [var.cidr_block]
+  security_group_id        = aws_security_group.eks_nodes_sg.id
+  description              = "Allow HTTPS to AWS Services via VPC Endpoint"
+}
+
+
+
+
 
 
 

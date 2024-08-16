@@ -33,3 +33,8 @@ variable "rds_private_subnet_cidrs_list" {
  description = "RDS private subnet CIDRs"
 }
 
+variable "sqs_queue_name_list" {
+ type        = list(string)
+ description = "AWS SQS Queue name list"
+}
+

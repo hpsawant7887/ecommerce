@@ -18,4 +18,12 @@ output "public_subnet_id_list" {
   value = [for subnet in aws_subnet.public_subnet: subnet.id]
 }
 
+output "private_subnet_route_table_id_list" {
+  value = [for rt in aws_route_table.private_subnet_route_table: rt.id ]
+}
+
+output "public_subnet_route_table_id_list" {
+  value = [aws_route_table.pub_rt.id]
+}
+
 

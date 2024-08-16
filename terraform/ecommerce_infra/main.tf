@@ -70,10 +70,20 @@ module "rds" {
 
 module "dynamodb" {
   source = "../modules/ecommerce_aws_dynamodb"
-}
+
+  vpc_id = module.network_setup.vpc_id
+  region = "us-west-2"
+  sg_id = module.network_setup.eks_worker_nodes_sg
+  route_table_ids = concat(module.network_setup.private_subnet_route_table_id_list, module.network_setup.public_subnet_route_table_id_list)
+  }
 
 module "sqs" {
   source = "../modules/ecommerce_aws_sqs"
+
+  sqs_queue_name_list = var.sqs_queue_name_list
+  vpc_id = module.network_setup.vpc_id
+  region = "us-west-2"
+  sg_id = module.network_setup.eks_worker_nodes_sg
 }
 
 
