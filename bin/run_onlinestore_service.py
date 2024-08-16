@@ -1,10 +1,17 @@
 import os
 import threading
 import json
+import hashlib
+import uuid
+import requests
 
-from src.onlinestore_service import OnlineStoreService, decrease_product_count, health_check, get_product, search_products, create_owner, add_product, add_store, get_store_info, getStores
+from flask import request
+from src.flask_service import FlaskService
 from src.sqs import SqsClient
 from time import sleep
+from src.k8s_utils import get_service_endpoint
+
+SQL_FILE = 'sql/onlinestore_schema.sql'
 
 
 def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
@@ -31,11 +38,144 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                     product_id = product['product_id']
                     quantity = product['quantity']
                     decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclientObj, product_id=product_id, quantity=quantity)
-
-                onlinestore_service_obj.mysqlclientObj.commit()
             else:
                 #illegal messageType
                 pass
+
+
+def health_check(**kwargs):
+    if request.method != 'GET':
+        return ('Invalid method', 400, {})
+    
+    try:
+        return ('Health Check Success', 200, {})
+    
+    except Exception as e:
+        return ('Internal Server Error', 500, {})
+    
+
+def verify_auth_header(func):
+    def wrapper(**kwargs):
+        try:
+            if not request.authorization or not request.authorization.username or request.authorization.password:
+                return (
+                    'Access Denied!', 401, {
+                        'WWW-Authenticate': 'Basic realm="Auth Required"'})
+
+            # get_password_query = "SELECT md5_password from users.credentials WHERE username={}".format(
+            #     request.authorization.username)
+
+            # stored_password = kwargs["authmysqlclientObj"].executeQuery(get_password_query)[
+            #     0]
+
+            # if stored_password != hashlib.md5(
+            #         request.authorization.password.encode('utf-8')).hexdigest():
+            #     return ('Authentication Failed', 401, {})
+            
+            users_service_endpoint = get_service_endpoint('users-service', 'users-service')
+
+            auth_url = 'http://{}/users-service-internal/verify_user'.format(users_service_endpoint)
+
+            data = {
+                'username': request.authorization.username,
+                'password': request.authorization.password
+            }
+
+            resp = requests.post(auth_url, data=json.dumps(data))
+
+            if resp.code != 200:
+                return ('Authentication Failed', 401, {})
+
+            return func(**kwargs)
+        except Exception as e:
+            # return error
+            return ('Internal Server Error', 500, {})
+
+    return wrapper
+
+
+@verify_auth_header
+def get_product(**kwargs):
+    if request.method != 'GET':
+        return ('Invalid method', 400, {})
+    
+    product_id = request.args.get('productId')
+
+    query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id={}".format(product_id)
+
+    res = kwargs["mysqlclientObj"].executeQuery(query)
+
+    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+
+    
+@verify_auth_header
+def search_products(**kwargs):
+    if request.method != 'GET':
+        return ('Invalid method', 400, {})
+    
+    search_key = request.args.get('searchKey')
+
+    query = "SELECT product_id,product_name,product_description,price,available_quantity FROM onlinestore.products WHERE product_name LIKE '%{}%' OR product_description LIKE '%{}%' ".format(search_key)
+
+    res = kwargs["mysqlclientObj"].executeQuery(query)
+
+    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+
+
+def add_product(**kwargs):
+    try:
+        if request.method != 'POST':
+            return ('Invalid method', 400, {})
+        
+        data = request.get_json(force=True)
+
+        if not data:
+            return ('Invalid Request Body', 400, {})
+        
+        product_name = data['product_name']
+        product_description = data['product_description']
+        product_id = uuid.uuid4().int
+        price = float("{:.2f}".format(data['price']))
+        available_quantity = data['available_quantity']
+
+        query = "INSERT INTO onlinestore.products (product_id,product_name,product_description,price,available_quantity) VALUES ({}, {}, {}, {}, {})".format(product_id, product_name, product_description, price, available_quantity)
+
+        res = kwargs["mysqlclientObj"].executeQuery(query)
+
+        kwargs["mysqlclientObj"].commit()
+
+        return (json.dumps({'product_id': product_id, 'product_name': product_name}),200, {'Content-Type': 'application/json'})
+    except Exception as e:
+        return ('Internal Server Error', 500, {})
+
+def delete_product(**kwargs):
+    pass
+
+
+def update_product(**kwargs):
+    pass
+
+    
+# internal API
+def increase_product_count(**kwargs):
+    pass
+
+
+def decrease_product_count(**kwargs):
+    product_id = kwargs['product_id']
+    ordered_quantity = kwargs['quantity']
+
+    query = "UPDATE onlinestore.products SET available_quantity = available_quantity - {} WHERE product_id={}".format(ordered_quantity, product_id)
+
+    res = kwargs["mysqlclientObj"].executeQuery(query)
+
+    kwargs["mysqlclientObj"].commit()
+    
+
+def check_product_exists(**kwargs):
+    pass
+
+
 
 def main():
     backend_db_info = {
@@ -43,13 +183,12 @@ def main():
         "port": os.environ['RDS_MYSQL_PORT'],
         "user": os.environ['RDS_MYSQL_USER'],
         "password": os.environ['RDS_MYSQL_PASSWORD'],
-        "db_name": os.environ['RDS_MYSQL_DB_NAME'],
-        "auth_db_name": os.environ['RDS_MYSQL_AUTH_DB_NAME']
+        "db_name": os.environ['RDS_MYSQL_DB_NAME']
     }
 
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE']
 
-    onlinestore_service_obj = OnlineStoreService('demo-eshop-online-store-service',backend_db_info)
+    onlinestore_service_obj = FlaskService('demo-eshop-online-store-service', SQL_FILE, backend_db_info)
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, onlinestore_service_obj,))
     t1.start()
@@ -68,34 +207,12 @@ def main():
         endpoint='/onlinestore-service/getProductInfo',
         endpoint_name='getProductInfo',
         handler=get_product)
-
-    onlinestore_service_obj.add_endpoint(
-        endpoint='/onlinestore-service/createStoreOwner',
-        endpoint_name='createStoreOwner',
-        handler=create_owner,
-        methods=['POST'])
-    
-    onlinestore_service_obj.add_endpoint(
-        endpoint='/onlinestore-service/addStore',
-        endpoint_name='addStore',
-        handler=add_store,
-        methods=['POST'])
     
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/addProduct',
         endpoint_name='addProduct',
         handler=add_product,
         methods=['POST'])
-    
-    onlinestore_service_obj.add_endpoint(
-        endpoint='/onlinestore-service/getStoreInfo',
-        endpoint_name='getStoreInfo',
-        handler=get_store_info)
-    
-    onlinestore_service_obj.add_endpoint(
-        endpoint='/onlinestore-service/getStores',
-        endpoint_name='getStores',
-        handler=getStores)
     
     onlinestore_service_obj.run("0.0.0.0", 8081)
 

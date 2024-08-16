@@ -10,6 +10,8 @@ class SqsClient:
         with open(os.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"), 'r') as content_file:
             web_identity_token = content_file.read()
         
+        endpoint_url = os.getenv('SQS_VPC_ENDPOINT_URL')
+        
         role = boto3.client('sts').assume_role_with_web_identity(RoleArn=role_arn, RoleSessionName='assume-role',
                                                              WebIdentityToken=web_identity_token)
         
@@ -21,7 +23,7 @@ class SqsClient:
         session = boto3.session.Session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key,
                               aws_session_token=aws_session_token)
         
-        self.sqs_client = session.client('sqs')
+        self.sqs_client = session.client('sqs', endpoint_url=endpoint_url)
 
 
     def read_sqs_msg(self, sqs_queue_url):

@@ -52,16 +52,21 @@ spec:
                 configMapKeyRef:
                   name: {{ include "onlinestore-service.fullname" . }}-configmap
                   key: mysql_db_name
-            - name: RDS_MYSQL_AUTH_DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "onlinestore-service.fullname" . }}-configmap
-                  key: mysql_auth_db_name
+            # - name: RDS_MYSQL_AUTH_DB_NAME
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: {{ include "onlinestore-service.fullname" . }}-configmap
+            #       key: mysql_auth_db_name
             - name: SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "onlinestore-service.fullname" . }}-configmap
                   key: sqs_queue_url_ordering_to_onlinestore
+            - name: SQS_VPC_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: sqs_vpc_endpoint_url
             - name: RDS_MYSQL_PORT
               value: "3306"
             - name: RDS_MYSQL_PASSWORD
