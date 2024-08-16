@@ -165,7 +165,7 @@ def main():
         methods=['POST'])
     
     users_service_obj.add_endpoint(
-        endpoint='users-service-internal/getUserAddress',
+        endpoint='/users-service-internal/getUserAddress',
         endpoint_name='getUserAddress',
         handler=get_user_address)
 
