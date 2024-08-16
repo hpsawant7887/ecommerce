@@ -15,4 +15,27 @@ services:
     image: hpsawant2013/onlinestore_service:latest
     ports:
       - "8081:8081"
-  
+  carts_service:
+    build:
+      context: .
+      dockerfile: ./carts_service/Dockerfile
+      shm_size: '2gb'
+    image: hpsawant2013/carts_service:latest
+    ports:
+      - "8082:8082"
+  ordering_service:
+    build:
+      context: .
+      dockerfile: ./ordering_service/Dockerfile
+      shm_size: '2gb'
+    image: hpsawant2013/ordering_service:latest
+    ports:
+      - "8083:8083"
+  shipping_service:
+    build:
+      context: .
+      dockerfile: ./shipping_service/Dockerfile
+      shm_size: '2gb'
+    image: hpsawant2013/shipping_service:latest
+    ports:
+      - "8084:8084"

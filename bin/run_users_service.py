@@ -88,12 +88,46 @@ def verify_auth_header(func):
 
 @verify_auth_header
 def get_user_info(mysqlclientObj):
-    user_info_query = "SELECT username, first_name, last_name, email, address from users.user_info WHERE username='{}'".format(
+    user_info_query = "SELECT user_id, username, first_name, last_name, email, address from users.user_info WHERE username='{}'".format(
         request.authorization.username)
 
     res = mysqlclientObj.executeQuery(user_info_query)
 
     return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+
+
+def get_user_address(mysqlclientObj):
+    user_id = request.args.get('userId')
+
+    user_info_query = "SELECT first_name, last_name, address from users.user_info WHERE user_id='{}'".format(user_id)
+
+    res = mysqlclientObj.executeQuery(user_info_query)
+
+    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+
+
+def verify_user(mysqlclientObj):
+    try:
+        data = request.get_json(force=True)
+
+        if not data:
+            return ('Invalid Request Body', 400, {})
+        
+        username = data['username']
+        password = hashlib.md5(data['password'].encode('utf-8')).hexdigest()
+
+        get_password_query = "SELECT md5_password from users.credentials WHERE username='{}'".format(username)
+
+        stored_password = mysqlclientObj.executeQuery(get_password_query)[0]
+
+        if stored_password != password:
+            return ('Incorrect Credentials', 401, {})
+            
+        return ('User Verified', 200, {})
+        
+    except Exception as e:
+        return ('Internal Server Error', 500, {})
+
 
 
 def main():
@@ -123,6 +157,17 @@ def main():
         endpoint='/users-service/healthCheck',
         endpoint_name='healthCheck',
         handler=health_check)
+    
+    users_service_obj.add_endpoint(
+        endpoint='/users-service-internal/verify_user',
+        endpoint_name='verify_user',
+        handler=verify_user,
+        methods=['POST'])
+    
+    users_service_obj.add_endpoint(
+        endpoint='users-service-internal/getUserAddress',
+        endpoint_name='getUserAddress',
+        handler=get_user_address)
 
     users_service_obj.run("0.0.0.0", 8080)
 
