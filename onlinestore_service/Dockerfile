@@ -41,6 +41,8 @@ RUN pip install pytest
 RUN pip install pymysql
 RUN pip install flask
 RUN pip install boto3
+RUN pip install requests
+RUN pip install kubernetes
 
 # Setup the Users Service
 RUN python3 setup.py install onlinestore_service
