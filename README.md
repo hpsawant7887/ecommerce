@@ -7,7 +7,7 @@ Ecommerce Service `demo-eshop` consists of following microservices:
 - Online Store
 
 ## Design
-![Alt text](Ecommerce-Design.png)
+![Alt text](Ecommerce_Design.png)
 
 ## AWS Infrastructure
 ![Alt text](AWS_Infra.png)
