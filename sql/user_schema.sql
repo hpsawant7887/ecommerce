@@ -10,7 +10,7 @@ CREATE TABLE  users.user_info (
 );
 CREATE TABLE users.credentials (
     user_id int NOT NULL,
-    username varchar(255)
+    username varchar(255),
     md5_password varchar(255),
     PRIMARY KEY (user_id)
 )
