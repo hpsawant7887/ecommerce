@@ -2,8 +2,8 @@ apiVersion: v2
 name: carts-service
 description: A Helm chart for Kubernetes
 type: application
-version: 0.1.4
-appVersion: 1.1.3
+version: 0.1.5
+appVersion: 1.1.4
 maintainers:
   - name: hpsawant
     email: hpsawant2013@gmail.com
