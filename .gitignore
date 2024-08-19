@@ -25,3 +25,4 @@ terraform.rc
 
 # ignore helm dependency *.tgz files
 *.tgz
+.DS_Store
