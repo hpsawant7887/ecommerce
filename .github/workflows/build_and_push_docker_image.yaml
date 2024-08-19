@@ -10,12 +10,13 @@ on:
         type: string
       docker_image_version_tag:
         description: 'Enter tag for Docker Image'
-        default: 'latest'
+        default: 'latest(Please Change)'
         required: true
         type: string
       helm_chart_version_tag:
         description: 'Enter Helm Chart version'
         required: true
+        default: '1.0.0(Please Change)'
         type: string
 
 jobs:
