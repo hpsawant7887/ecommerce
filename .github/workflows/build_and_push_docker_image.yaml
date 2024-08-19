@@ -1,0 +1,48 @@
+name: Manual Trigger Workflow with loglevel & tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: "Enter service name"
+        default: 'users_service'
+        required: true
+        type: string
+      docker_image_version_tag:
+        description: 'Enter tag for Docker Image'
+        default: 'latest'
+        required: true
+        type: string
+      helm_chart_version_tag:
+        description: 'Enter Helm Chart version'
+        required: true
+        type: string
+
+jobs:
+  print-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./${{ inputs.service_name }}
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ inputs.service_name }}:${{ inputs.docker_image_version_tag }}
+
+      - name: Update Helm Chart Version
+        run: |
+          cd helm/charts/$(echo -n '${{ inputs.service_name }}' | tr '_' '-')
+          sed -i 's/appVersion:.*/appVersion: ${{ inputs.docker_image_version_tag }}/g' Chart.yaml
+          sed -i 's/version:.*/version: ${{ helm_chart_version_tag }}/g' Chart.yaml
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add Chart.yaml
+          git commit -m "Update App and Chart Version"
+          git push
