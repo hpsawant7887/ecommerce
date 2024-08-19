@@ -37,7 +37,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./${{ inputs.service_name }}
+          context: .
+          file: ./${{ inputs.service_name }}/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ inputs.service_name }}:${{ inputs.docker_image_version_tag }}
 
