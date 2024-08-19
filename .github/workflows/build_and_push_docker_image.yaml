@@ -1,4 +1,4 @@
-name: Manual Trigger Workflow with loglevel & tags
+name: Ecommerce Docker Build and Push
 
 on:
   workflow_dispatch:
