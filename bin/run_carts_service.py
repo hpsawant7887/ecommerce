@@ -16,8 +16,15 @@ from time import sleep
 def get_unique_cart_id():
     return uuid.uuid4().hex
 
-def health_check():
-    return ('Health Check Success', 200, {})
+def health_check(**kwargs):
+    if request.method != 'GET':
+        return ('Invalid method', 400, {})
+
+    try:
+        return ('Health Check Success', 200, {})
+
+    except Exception as e:
+        return ('Internal Server Error', 500, {})
 
 
 def verify_auth_header(func):
@@ -280,7 +287,7 @@ def main():
         methods=['DELETE'])
     
     cart_service_obj.add_endpoint(
-        endpoint='/onlinestore-service/deleteCart',
+        endpoint='/carts-service/deleteCart',
         endpoint_name='deleteCart',
         handler=deleteCart,
         methods=['DELETE'])
