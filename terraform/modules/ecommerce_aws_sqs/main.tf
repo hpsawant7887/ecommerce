@@ -1,6 +1,7 @@
 resource "aws_sqs_queue" "ecomm_sqs_queue" {
   for_each = toset(var.sqs_queue_name_list)
 
+  name                      = each.key
   delay_seconds             = 90
   message_retention_seconds = 900
   receive_wait_time_seconds = 10
