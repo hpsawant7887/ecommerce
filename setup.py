@@ -28,6 +28,30 @@ elif "onlinestore_service" in sys.argv:
     app = "onlinestore-service"
     sys.argv.remove('onlinestore_service')
 
+elif "carts_service" in sys.argv:
+    scripts = ['bin/run_carts_service.py']
+    console_scripts = [
+        "run-carts-service=bin.run_carts_service:main"
+    ]
+    app = "carts-service"
+    sys.argv.remove('carts_service')
+
+elif "shipping_service" in sys.argv:
+    scripts = ['bin/run_shipping_service.py']
+    console_scripts = [
+        "run-shipping-service=bin.run_shipping_service:main"
+    ]
+    app = "shipping-service"
+    sys.argv.remove('shipping_service')
+
+elif "ordering_service" in sys.argv:
+    scripts = ['bin/run_ordering_service.py']
+    console_scripts = [
+        "run-ordering-service=bin.run_ordering_service:main"
+    ]
+    app = "ordering-service"
+    sys.argv.remove('ordering_service')
+
 
 setup(
         name=app,
