@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "shipping-service.fullname" . }}
+  labels:
+    {{- include "shipping-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "shipping-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "shipping-service.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "shipping-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RDS_MYSQL_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: mysql_endpoint
+            - name: RDS_MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: mysql_user
+            - name: RDS_MYSQL_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: mysql_db_name
+            - name: RDS_MYSQL_PORT
+              value: "3306"
+            - name: RDS_MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-eshop-users-secret
+                  key: mysql-password
+            - name: SQS_QUEUE_URL_ORDERING_TO_SHIPPING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: sqs_queue_url_ordering_to_shipping
+            - name: SQS_QUEUE_URL_SHIPPING_TO_ORDERING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: sqs_queue_url_shipping_to_ordering
+            - name: SQS_VPC_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: sqs_vpc_endpoint_url
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

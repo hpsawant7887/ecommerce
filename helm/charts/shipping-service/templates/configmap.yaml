@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shipping-service.fullname" . }}-configmap
+data:
+  mysql_endpoint: "ecomm-rds-cluster.cluster-cpc4aos0m4ie.us-west-2.rds.amazonaws.com"
+  mysql_db_name: "onlinestore"
+  mysql_user: "admin_user"
+  sqs_queue_url_ordering_to_shipping: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-shipping"
+  sqs_queue_url_shipping_to_ordering: "https://sqs.us-west-2.amazonaws.com/507326814593/shipping-to-ordering"
+  sqs_vpc_endpoint_url: "https://sqs.us-west-2.amazonaws.com"

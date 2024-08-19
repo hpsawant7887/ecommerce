@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ordering-service.fullname" . }}-configmap
+data:
+  sqs_queue_url_ordering_to_carts: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-carts"
+  sqs_queue_url_ordering_to_onlinestore: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-onlinestore"
+  sqs_queue_url_ordering_to_shipping: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-shipping"
+  sqs_queue_url_shipping_to_ordering: "https://sqs.us-west-2.amazonaws.com/507326814593/shipping-to-ordering"
+  sqs_vpc_endpoint_url: "https://sqs.us-west-2.amazonaws.com"
