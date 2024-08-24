@@ -101,7 +101,7 @@ def verify_auth_header(func):
 
 @verify_auth_header
 def get_user_info(mysqlclientObj):
-    user_info_query = "SELECT user_id, username, first_name, last_name, email, address from users.user_info WHERE username='{}'".format(
+    user_info_query = "SELECT user_id, username, first_name, last_name, email, user_address from users.user_info WHERE username='{}'".format(
         request.authorization.username)
 
     res = mysqlclientObj.executeQuery(user_info_query)
@@ -113,7 +113,7 @@ def get_user_address(mysqlclientObj):
     try:
         user_id = request.args.get('userId')
 
-        user_info_query = "SELECT first_name, last_name, address from users.user_info WHERE user_id='{}'".format(user_id)
+        user_info_query = "SELECT first_name, last_name, user_address from users.user_info WHERE user_id='{}'".format(user_id)
 
         res = mysqlclientObj.executeQuery(user_info_query)[0]
 
