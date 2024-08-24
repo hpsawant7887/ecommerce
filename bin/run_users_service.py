@@ -74,7 +74,7 @@ def health_check(**kwargs):
 def verify_auth_header(func):
     def wrapper(mysqlclientObj):
         try:
-            if not request.authorization or not request.authorization.username or request.authorization.password:
+            if not request.authorization or not request.authorization.username or not request.authorization.password:
                 return (
                     'Access Denied!', 401, {
                         'WWW-Authenticate': 'Basic realm="Auth Required"'})
