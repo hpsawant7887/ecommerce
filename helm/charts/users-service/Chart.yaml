@@ -2,8 +2,8 @@ apiVersion: v2
 name: users-service
 description: A Helm chart for users-service
 type: application
-version: 1.0.2
-appVersion: 1.2.2
+version: 1.0.3
+appVersion: 1.2.3
 maintainers:
   - name: hpsawant
     email: hpsawant2013@gmail.com
