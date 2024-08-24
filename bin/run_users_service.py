@@ -26,16 +26,17 @@ def register_user_action(mysqlclientObj):
         last_name = data['last_name']
         email = data['username']
         address = data['address']
-        user_id = uuid.uuid4().int
+
+        # Generate 64 bit unique id
+        user_id = uuid.uuid1().int >> 64
 
         user_info_query = """INSERT into users.user_info (user_id, username, first_name, \
-            last_name, email, user_address) values ({}, {}, {}, {}, {}, {})""".format(
+            last_name, email, user_address) values ({},'{}','{}','{}','{}','{}')""".format(
             user_id, username, first_name, last_name, email, address)
 
         mysqlclientObj.executeQuery(user_info_query)
 
-        user_creds_query = """ INSERT into users.credentials (user_id, username, \
-            md5_password) values ({} {} {})""".format(user_id, username, password)
+        user_creds_query = """INSERT into users.credentials (user_id, md5_password) values ({},'{}')""".format(user_id, password)
 
         mysqlclientObj.executeQuery(user_creds_query)
 
@@ -67,12 +68,14 @@ def verify_auth_header(func):
                 return (
                     'Access Denied!', 401, {
                         'WWW-Authenticate': 'Basic realm="Auth Required"'})
+            
+            get_password_query = "SELECT credentials.md5_password FROM credentials JOIN user_info ON credentials.user_id = user_info.user_id  WHERE user_info.username = '{}'".format(request.authorization.username)
 
-            get_password_query = "SELECT md5_password from users.credentials WHERE username='{}'".format(
-                request.authorization.username)
+            # get_password_query = "SELECT md5_password from users.credentials WHERE username='{}'".format(
+            #     request.authorization.username)
 
             stored_password = mysqlclientObj.executeQuery(get_password_query)[
-                0]
+                0][0]
 
             if stored_password != hashlib.md5(
                     request.authorization.password.encode('utf-8')).hexdigest():
@@ -101,9 +104,15 @@ def get_user_address(mysqlclientObj):
 
     user_info_query = "SELECT first_name, last_name, address from users.user_info WHERE user_id='{}'".format(user_id)
 
-    res = mysqlclientObj.executeQuery(user_info_query)
+    res = mysqlclientObj.executeQuery(user_info_query)[0]
 
-    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+    address_info = {
+        'first_name': res[0],
+        'last_name': res[1],
+        'address': res[2]
+    }
+
+    return (json.dumps(address_info), 200, {'Content-Type': 'application/json'})
 
 
 def verify_user(mysqlclientObj):
@@ -116,9 +125,9 @@ def verify_user(mysqlclientObj):
         username = data['username']
         password = hashlib.md5(data['password'].encode('utf-8')).hexdigest()
 
-        get_password_query = "SELECT md5_password from users.credentials WHERE username='{}'".format(username)
+        get_password_query = "SELECT credentials.md5_password FROM credentials JOIN user_info ON credentials.user_id = user_info.user_id  WHERE user_info.username = '{}'".format(username)
 
-        stored_password = mysqlclientObj.executeQuery(get_password_query)[0]
+        stored_password = mysqlclientObj.executeQuery(get_password_query)[0][0]
 
         if stored_password != password:
             return ('Incorrect Credentials', 401, {})
