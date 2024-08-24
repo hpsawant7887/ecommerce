@@ -104,9 +104,18 @@ def get_user_info(mysqlclientObj):
     user_info_query = "SELECT user_id, username, first_name, last_name, email, user_address from users.user_info WHERE username='{}'".format(
         request.authorization.username)
 
-    res = mysqlclientObj.executeQuery(user_info_query)
+    res = mysqlclientObj.executeQuery(user_info_query)[0]
 
-    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+    user_info = {
+        "userId": res[0],
+        "username": res[1],
+        "First Name": res[2],
+        "Last Name": res[3],
+        "Email": res[4],
+        "Address": res[5]
+    }
+
+    return (json.dumps(user_info), 200, {'Content-Type': 'application/json'})
 
 
 def get_user_address(mysqlclientObj):
