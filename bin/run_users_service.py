@@ -1,10 +1,19 @@
 import os
 import hashlib
 import json
+import logging
 import uuid
 
 from flask import request
 from src.flask_service import FlaskService
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 SQL_FILE = 'sql/user_schema.sql'
 
@@ -46,6 +55,7 @@ def register_user_action(mysqlclientObj):
 
     except Exception as e:
         # return error
+        logging.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -83,7 +93,7 @@ def verify_auth_header(func):
 
             return func(mysqlclientObj)
         except Exception as e:
-            # return error
+            logging.error(e)
             return ('Internal Server Error', 500, {})
 
     return wrapper
@@ -100,19 +110,22 @@ def get_user_info(mysqlclientObj):
 
 
 def get_user_address(mysqlclientObj):
-    user_id = request.args.get('userId')
+    try:
+        user_id = request.args.get('userId')
 
-    user_info_query = "SELECT first_name, last_name, address from users.user_info WHERE user_id='{}'".format(user_id)
+        user_info_query = "SELECT first_name, last_name, address from users.user_info WHERE user_id='{}'".format(user_id)
 
-    res = mysqlclientObj.executeQuery(user_info_query)[0]
+        res = mysqlclientObj.executeQuery(user_info_query)[0]
 
-    address_info = {
-        'first_name': res[0],
-        'last_name': res[1],
-        'address': res[2]
-    }
+        address_info = {
+            'first_name': res[0],
+            'last_name': res[1],
+            'address': res[2]
+        }
 
-    return (json.dumps(address_info), 200, {'Content-Type': 'application/json'})
+        return (json.dumps(address_info), 200, {'Content-Type': 'application/json'})
+    except Exception as e:
+        logging.error(e)
 
 
 def verify_user(mysqlclientObj):
@@ -135,6 +148,7 @@ def verify_user(mysqlclientObj):
         return ('User Verified', 200, {})
         
     except Exception as e:
+        logging.error(e)
         return ('Internal Server Error', 500, {})
 
 
