@@ -164,6 +164,8 @@ def main():
 
     users_service_obj = FlaskService(
         'demo-eshop-users-service', SQL_FILE, backend_db_info)
+    
+    users_service_obj.mysqlclient.setConnection()
 
     users_service_obj.add_endpoint(
         endpoint='/users-service/register_user',
