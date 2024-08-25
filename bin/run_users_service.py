@@ -42,7 +42,8 @@ def register_user_action(mysqlclientObj):
         user_info_query = """INSERT into users.user_info (user_id, username, first_name, \
             last_name, email, user_address) values ({},'{}','{}','{}','{}','{}')""".format(
             user_id, username, first_name, last_name, email, address)
-
+        
+        mysqlclientObj.setConnection()
         mysqlclientObj.executeQuery(user_info_query)
 
         user_creds_query = """INSERT into users.credentials (user_id, md5_password) values ({},'{}')""".format(user_id, password)
@@ -50,6 +51,7 @@ def register_user_action(mysqlclientObj):
         mysqlclientObj.executeQuery(user_creds_query)
 
         mysqlclientObj.commit()
+        mysqlclientObj.closeConnection()
 
         return ('User Registration Complete', 200, {})
 
@@ -83,6 +85,7 @@ def verify_auth_header(func):
 
             # get_password_query = "SELECT md5_password from users.credentials WHERE username='{}'".format(
             #     request.authorization.username)
+            mysqlclientObj.setConnection()
 
             stored_password = mysqlclientObj.executeQuery(get_password_query)[
                 0][0]
@@ -115,12 +118,16 @@ def get_user_info(mysqlclientObj):
         "Address": res[5]
     }
 
+    mysqlclientObj.closeConnection()
+
     return (json.dumps(user_info), 200, {'Content-Type': 'application/json'})
 
 
 def get_user_address(mysqlclientObj):
     try:
         user_id = request.args.get('userId')
+
+        mysqlclientObj.setConnection()
 
         user_info_query = "SELECT first_name, last_name, user_address from users.user_info WHERE user_id='{}'".format(user_id)
 
@@ -131,6 +138,8 @@ def get_user_address(mysqlclientObj):
             'last_name': res[1],
             'address': res[2]
         }
+
+        mysqlclientObj.closeConnection()
 
         return (json.dumps(address_info), 200, {'Content-Type': 'application/json'})
     except Exception as e:
@@ -149,7 +158,10 @@ def verify_user(mysqlclientObj):
 
         get_password_query = "SELECT credentials.md5_password FROM credentials JOIN user_info ON credentials.user_id = user_info.user_id  WHERE user_info.username = '{}'".format(username)
 
+        mysqlclientObj.setConnection()
         stored_password = mysqlclientObj.executeQuery(get_password_query)[0][0]
+
+        mysqlclientObj.closeConnection()
 
         if stored_password != password:
             return ('Incorrect Credentials', 401, {})
@@ -174,7 +186,7 @@ def main():
     users_service_obj = FlaskService(
         'demo-eshop-users-service', SQL_FILE, backend_db_info)
     
-    users_service_obj.mysqlclient.setConnection()
+    # users_service_obj.mysqlclient.setConnection()
 
     users_service_obj.add_endpoint(
         endpoint='/users-service/register_user',
