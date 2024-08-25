@@ -2,6 +2,8 @@ import os
 import threading
 import json
 import hashlib
+import logging
+
 import uuid
 import requests
 
@@ -10,6 +12,14 @@ from src.flask_service import FlaskService
 from src.sqs import SqsClient
 from time import sleep
 from src.k8s_utils import get_service_endpoint
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 SQL_FILE = 'sql/onlinestore_schema.sql'
 
@@ -37,7 +47,7 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                 for product in order["products"]:
                     product_id = product['product_id']
                     quantity = product['quantity']
-                    decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclientObj, product_id=product_id, quantity=quantity)
+                    decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclient, product_id=product_id, quantity=quantity)
             else:
                 #illegal messageType
                 pass
@@ -57,7 +67,7 @@ def health_check(**kwargs):
 def verify_auth_header(func):
     def wrapper(**kwargs):
         try:
-            if not request.authorization or not request.authorization.username or request.authorization.password:
+            if not request.authorization or not request.authorization.username or not request.authorization.password:
                 return (
                     'Access Denied!', 401, {
                         'WWW-Authenticate': 'Basic realm="Auth Required"'})
@@ -88,7 +98,7 @@ def verify_auth_header(func):
 
             return func(**kwargs)
         except Exception as e:
-            # return error
+            logger.error(e)
             return ('Internal Server Error', 500, {})
 
     return wrapper
@@ -101,11 +111,19 @@ def get_product(**kwargs):
     
     product_id = request.args.get('productId')
 
-    query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id={}".format(product_id)
+    query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id='{}'".format(product_id)
 
-    res = kwargs["mysqlclientObj"].executeQuery(query)
+    res = kwargs["mysqlclientObj"].executeQuery(query)[0]
 
-    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+    product_info = {
+        'product_id': res[0],
+        'product_name': res[1],
+        'product_description': res[2],
+        'price': res[3],
+        'available_quantity': res[4]
+    }
+
+    return (json.dumps(product_info), 200, {'Content-Type': 'application/json'})
 
     
 @verify_auth_header
@@ -119,7 +137,19 @@ def search_products(**kwargs):
 
     res = kwargs["mysqlclientObj"].executeQuery(query)
 
-    return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+    products = {'products': []}
+
+    for product in res:
+        p = {}
+        p['product_id'] = product[0]
+        p['product_name'] = product[1]
+        p['product_description'] = product[2]
+        p['price'] = product[3]
+        p['available_quantity'] = product[4]
+
+        products['products'].append(p)
+
+    return (json.dumps(products), 200, {'Content-Type': 'application/json'})
 
 
 def add_product(**kwargs):
@@ -134,11 +164,11 @@ def add_product(**kwargs):
         
         product_name = data['product_name']
         product_description = data['product_description']
-        product_id = uuid.uuid4().int
+        product_id = uuid.uuid1().int >> 64
         price = float("{:.2f}".format(data['price']))
         available_quantity = data['available_quantity']
 
-        query = "INSERT INTO onlinestore.products (product_id,product_name,product_description,price,available_quantity) VALUES ({}, {}, {}, {}, {})".format(product_id, product_name, product_description, price, available_quantity)
+        query = "INSERT INTO onlinestore.products (product_id,product_name,product_description,price,available_quantity) VALUES ({},'{}','{}',{},{})".format(product_id, product_name, product_description, price, available_quantity)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
@@ -146,6 +176,7 @@ def add_product(**kwargs):
 
         return (json.dumps({'product_id': product_id, 'product_name': product_name}),200, {'Content-Type': 'application/json'})
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 def delete_product(**kwargs):
@@ -176,7 +207,6 @@ def check_product_exists(**kwargs):
     pass
 
 
-
 def main():
     backend_db_info = {
         "endpoint": os.environ['RDS_MYSQL_ENDPOINT'],
@@ -189,6 +219,8 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE']
 
     onlinestore_service_obj = FlaskService('demo-eshop-online-store-service', SQL_FILE, backend_db_info)
+
+    onlinestore_service_obj.mysqlclient.setConnection()
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, onlinestore_service_obj,))
     t1.start()
