@@ -93,7 +93,7 @@ def verify_auth_header(func):
 
             resp = requests.post(auth_url, data=json.dumps(data))
 
-            if resp.code != 200:
+            if resp.status_code != 200:
                 return ('Authentication Failed', 401, {})
 
             return func(**kwargs)
