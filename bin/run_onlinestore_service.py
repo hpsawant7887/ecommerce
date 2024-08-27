@@ -82,7 +82,7 @@ def verify_auth_header(func):
             #         request.authorization.password.encode('utf-8')).hexdigest():
             #     return ('Authentication Failed', 401, {})
             
-            users_service_endpoint = get_service_endpoint('users-service', 'users-service')
+            users_service_endpoint = get_service_endpoint('demo-eshop-users-service', 'users-service')
 
             auth_url = 'http://{}/users-service-internal/verify_user'.format(users_service_endpoint)
 
