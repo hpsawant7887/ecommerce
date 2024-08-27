@@ -1,6 +1,7 @@
 import os
 import threading
 import json
+import logging
 import hashlib
 import uuid
 import requests
@@ -10,6 +11,14 @@ from src.flask_service_v2 import FlaskServiceV2
 from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
 from time import sleep
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_unique_order_id():
@@ -24,28 +33,19 @@ def health_check(**kwargs):
         return ('Health Check Success', 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
 def verify_auth_header(func):
     def wrapper(**kwargs):
         try:
-            if not request.authorization or not request.authorization.username or request.authorization.password:
+            if not request.authorization or not request.authorization.username or not request.authorization.password:
                 return (
                     'Access Denied!', 401, {
                         'WWW-Authenticate': 'Basic realm="Auth Required"'})
-
-            # get_password_query = "SELECT md5_password from users.credentials WHERE username={}".format(
-            #     request.authorization.username)
-
-            # stored_password = kwargs["authmysqlclientObj"].executeQuery(get_password_query)[
-            #     0]
-
-            # if stored_password != hashlib.md5(
-            #         request.authorization.password.encode('utf-8')).hexdigest():
-            #     return ('Authentication Failed', 401, {})
             
-            users_service_endpoint = get_service_endpoint('users-service', 'users-service')
+            users_service_endpoint = get_service_endpoint('demo-eshop-users-service', 'users-service')
 
             auth_url = 'http://{}/users-service-internal/verify_user'.format(users_service_endpoint)
 
@@ -56,12 +56,12 @@ def verify_auth_header(func):
 
             resp = requests.post(auth_url, data=json.dumps(data))
 
-            if resp.code != 200:
+            if resp.status_code != 200:
                 return ('Authentication Failed', 401, {})
 
             return func(**kwargs)
         except Exception as e:
-            # return error
+            logger.error(e)
             return ('Internal Server Error', 500, {})
 
     return wrapper
@@ -136,6 +136,7 @@ def placeOrder(**kwargs):
         return (json.dumps(ddb_res), 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
     
 
@@ -169,6 +170,7 @@ def getOrderStatus(**kwargs):
         return (json.dumps(res), 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server error', 500, {})
     
 
