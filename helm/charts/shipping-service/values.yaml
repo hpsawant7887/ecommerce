@@ -82,11 +82,11 @@ resources:
 
 livenessProbe:
   httpGet:
-    path: /shiping-service/healthCheck
+    path: /shipping-service/healthCheck
     port: 8084
 readinessProbe:
   httpGet:
-    path: /shiping-service/healthCheck
+    path: /shipping-service/healthCheck
     port: 8084
 
 autoscaling:
