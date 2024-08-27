@@ -30,12 +30,12 @@ def health_check(**kwargs):
 def verify_auth_header(func):
     def wrapper(**kwargs):
         try:
-            if not request.authorization or not request.authorization.username or request.authorization.password:
+            if not request.authorization or not request.authorization.username or not request.authorization.password:
                 return (
                     'Access Denied!', 401, {
                         'WWW-Authenticate': 'Basic realm="Auth Required"'})
             
-            users_service_endpoint = get_service_endpoint('users-service', 'users-service')
+            users_service_endpoint = get_service_endpoint('demo-eshop-users-service', 'users-service')
 
             auth_url = 'http://{}/users-service-internal/verify_user'.format(users_service_endpoint)
 
@@ -46,7 +46,7 @@ def verify_auth_header(func):
 
             resp = requests.post(auth_url, data=json.dumps(data))
 
-            if resp.code != 200:
+            if resp.status_code != 200:
                 return ('Authentication Failed', 401, {})
 
             return func(**kwargs)
@@ -204,7 +204,7 @@ def deleteCart(**kwargs):
 
         res = dynamodbclient.delete_dynamodb_item('carts', Key)
 
-        return ('', 200, {})
+        return ('Cart {} for user_id {} deleted'.format(cart_id, user_id), 200, {})
 
     except Exception as e:
         return ('Internal Server Error', 500, {})
