@@ -132,7 +132,7 @@ def get_product(**kwargs):
     
 @verify_auth_header
 def search_products(**kwargs):
-    if request.method != 'POST':
+    if request.method != 'GET':
         return ('Invalid method', 400, {})
     
     search_key = request.args.get('searchKey')
@@ -244,8 +244,7 @@ def main():
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/searchProducts',
         endpoint_name='searchProducts',
-        handler=search_products,
-        methods=['POST'])
+        handler=search_products)
 
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/getProductInfo',
