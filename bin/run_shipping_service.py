@@ -1,4 +1,5 @@
 import os
+import threading
 import hashlib
 import json
 import uuid
@@ -34,7 +35,7 @@ def create_shipment(**kwargs):
         order_id = kwargs['order_id']
         user_id = kwargs['user_id']
 
-        users_service_endpoint = get_service_endpoint('users-service', 'users-service')
+        users_service_endpoint = get_service_endpoint('demo-eshop-users-service', 'users-service')
 
         users_service_url = 'http://{}/users-service-internal/getUserAddress'.format(users_service_endpoint)
 
@@ -45,7 +46,7 @@ def create_shipment(**kwargs):
         destination = resp_body['address']
         shipment_status = 'CREATED'  #CREATED, SHIPPED, DELIVERED
 
-        query = "INSERT into shipping.shipments (shipment_id,order_id,user_id,destination,status) VALUES ({}, {}, {}, {}, {})".format(shipment_id, order_id, user_id, destination, shipment_status)
+        query = "INSERT into shipping.shipments (shipment_id,order_id,user_id,destination,status) VALUES ({},{},{},'{}','{}')".format(shipment_id, order_id, user_id, destination, shipment_status)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
@@ -66,15 +67,33 @@ def update_shipment(**kwargs):
         shipment_id = data['shipmentId']
         shipment_status = data['status']
 
+        kwargs["mysqlclientObj"].setConnection()
+
         query = "UPDATE shipping.shipments SET status = {} WHERE shipment_id={}".format(shipment_status, shipment_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
         kwargs["mysqlclientObj"].commit()
 
+        get_shipment_query = "SELECT shipment_id, user_id, order_id, status FROM shipping.shipments WHERE shipment_id={}".format(shipment_id)
+
+        res = kwargs["mysqlclientObj"].executeQuery(get_shipment_query)[0]
 
         # send SQS message to Ordering
+        sqs_client_obj = SqsClient()
+        sqs_queue_url = os.environ['SQS_QUEUE_URL_SHIPPING_TO_ORDERING']
 
+        sqs_msg = {
+            'type': 'OrderShipped',
+            'shipment_id': res[0],
+            'user_id': res[1],
+            'order_id': res[2],
+            'status': res[3]
+        }
+
+        sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
+
+        kwargs["mysqlclientObj"].closeConnection()
 
         return (json.dumps({'shipment_id': shipment_id, 'status': shipment_status}), 200, {'Content-Type': 'application/json'})
 
@@ -89,10 +108,14 @@ def get_shipment_info(**kwargs):
             return ('Invalid method', 400, {})
         
         shipment_id = request.args.get('shipmentId')
+
+        kwargs["mysqlclientObj"].setConnection()
         
         query = "SELECT * from shpipping.shipments where shipment_id={}".format(shipment_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
+
+        kwargs["mysqlclientObj"].closeConnection()
 
         return (json.dumps(res), 200, {'Content-Type': 'application/json'})
 
@@ -106,10 +129,14 @@ def get_all_shipments(**kwargs):
             return ('Invalid method', 400, {})
         
         user_id = request.args.get('userId')
+
+        kwargs["mysqlclientObj"].setConnection()
         
         query = "SELECT * from shpipping.shipments where user_id={}".format(user_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
+
+        kwargs["mysqlclientObj"].closeConnection()
 
         return (json.dumps(res), 200, {'Content-Type': 'application/json'})
 
@@ -150,31 +177,36 @@ def main():
         "db_name": os.environ['RDS_MYSQL_DB_NAME']
     }
 
-    users_service_obj = FlaskService(
-        'demo-eshop-shipping-service', SQL_FILE, backend_db_info)
+    sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_SHIPPING']
 
-    users_service_obj.add_endpoint(
+    shipping_service_obj = FlaskService(
+        'demo-eshop-shipping-service', SQL_FILE, backend_db_info)
+    
+    t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, shipping_service_obj,))
+    t1.start()
+
+    shipping_service_obj.add_endpoint(
         endpoint='/shipping-service/updateShipment',
         endpoint_name='updateShipment',
         handler=update_shipment,
         methods=['PUT'])
 
-    users_service_obj.add_endpoint(
-        endpoint='/users-service/getShipmentInfo',
+    shipping_service_obj.add_endpoint(
+        endpoint='/shipping-service/getShipmentInfo',
         endpoint_name='getShipmentInfo',
         handler=get_shipment_info)
     
-    users_service_obj.add_endpoint(
-        endpoint='/users-service/getAllShipments',
+    shipping_service_obj.add_endpoint(
+        endpoint='/shipping-service/getAllShipments',
         endpoint_name='getAllShipments',
         handler=get_all_shipments)
 
-    users_service_obj.add_endpoint(
-        endpoint='/users-service/healthCheck',
+    shipping_service_obj.add_endpoint(
+        endpoint='/shipping-service/healthCheck',
         endpoint_name='healthCheck',
         handler=health_check)
 
-    users_service_obj.run("0.0.0.0", 8084)
+    shipping_service_obj.run("0.0.0.0", 8084)
 
 
 if __name__ == '__main__':
