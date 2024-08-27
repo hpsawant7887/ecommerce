@@ -139,7 +139,7 @@ def search_products(**kwargs):
 
     kwargs["mysqlclientObj"].setConnection()
 
-    query = "SELECT product_id,product_name,product_description,price,available_quantity FROM onlinestore.products WHERE product_name LIKE '%{}%' OR product_description LIKE '%{}%' ".format(search_key)
+    query = "SELECT product_id,product_name,product_description,price,available_quantity FROM onlinestore.products WHERE product_name LIKE '%{}%' OR product_description LIKE '%{}%' ".format(search_key, search_key)
 
     res = kwargs["mysqlclientObj"].executeQuery(query)
 
