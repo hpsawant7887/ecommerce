@@ -36,5 +36,5 @@ class FlaskServiceV2:
         self.service.add_url_rule(
             endpoint,
             endpoint_name,
-            EndpointHandler(handler),
+            EndpointHandler(handler, dynamodbclient=self.dynamodbclient),
             methods=methods)
