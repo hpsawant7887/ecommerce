@@ -152,7 +152,7 @@ def search_products(**kwargs):
         p['product_id'] = product[0]
         p['product_name'] = product[1]
         p['product_description'] = product[2]
-        p['price'] = product[3]
+        p['price'] = float(product[3])
         p['available_quantity'] = product[4]
 
         products['products'].append(p)
