@@ -2,6 +2,7 @@ import os
 import threading
 import json
 import hashlib
+import logging
 import uuid
 import requests
 
@@ -11,6 +12,14 @@ from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
 from src.dynamodb import DynamoDBClient
 from time import sleep
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_unique_cart_id():
@@ -78,6 +87,7 @@ def create_cart(**kwargs):
         return (json.dumps(res), 200, {})
     
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 @verify_auth_header
@@ -106,6 +116,7 @@ def get_cart(**kwargs):
         return (json.dumps(res), 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -145,6 +156,7 @@ def addToCart(**kwargs):
         return ('Added to Cart', 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -179,6 +191,7 @@ def removeFromCart(**kwargs):
         return ('', 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -207,6 +220,7 @@ def deleteCart(**kwargs):
         return ('Cart {} for user_id {} deleted'.format(cart_id, user_id), 200, {})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
