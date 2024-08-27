@@ -30,7 +30,7 @@ COPY src/flask_service_v2.py /opt/ordering_service/src/
 COPY src/sqs.py /opt/ordering_service/src/
 COPY src/dynamodb.py /opt/ordering_service/src/
 COPY src/__init__.py /opt/ordering_service/src/
-COPY src/k8s_utils.py /opt/carts_service/src/
+COPY src/k8s_utils.py /opt/ordering_service/src/
 #COPY test/test_users.py /opt/users_service/test/
 
 # Install dependencies
