@@ -111,6 +111,8 @@ def get_product(**kwargs):
     
     product_id = request.args.get('productId')
 
+    kwargs["mysqlclientObj"].setConnection()
+
     query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id='{}'".format(product_id)
 
     res = kwargs["mysqlclientObj"].executeQuery(query)[0]
@@ -123,19 +125,25 @@ def get_product(**kwargs):
         'available_quantity': res[4]
     }
 
+    kwargs["mysqlclientObj"].closeConnection()
+
     return (json.dumps(product_info), 200, {'Content-Type': 'application/json'})
 
     
 @verify_auth_header
 def search_products(**kwargs):
-    if request.method != 'GET':
+    if request.method != 'POST':
         return ('Invalid method', 400, {})
     
     search_key = request.args.get('searchKey')
 
+    kwargs["mysqlclientObj"].setConnection()
+
     query = "SELECT product_id,product_name,product_description,price,available_quantity FROM onlinestore.products WHERE product_name LIKE '%{}%' OR product_description LIKE '%{}%' ".format(search_key)
 
     res = kwargs["mysqlclientObj"].executeQuery(query)
+
+    kwargs["mysqlclientObj"].closeConnection()
 
     products = {'products': []}
 
@@ -168,11 +176,14 @@ def add_product(**kwargs):
         price = float("{:.2f}".format(data['price']))
         available_quantity = data['available_quantity']
 
+        kwargs["mysqlclientObj"].setConnection()
+
         query = "INSERT INTO onlinestore.products (product_id,product_name,product_description,price,available_quantity) VALUES ({},'{}','{}',{},{})".format(product_id, product_name, product_description, price, available_quantity)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
         kwargs["mysqlclientObj"].commit()
+        kwargs["mysqlclientObj"].closeConnection()
 
         return (json.dumps({'product_id': product_id, 'product_name': product_name}),200, {'Content-Type': 'application/json'})
     except Exception as e:
@@ -220,7 +231,7 @@ def main():
 
     onlinestore_service_obj = FlaskService('demo-eshop-online-store-service', SQL_FILE, backend_db_info)
 
-    onlinestore_service_obj.mysqlclient.setConnection()
+    #onlinestore_service_obj.mysqlclient.setConnection()
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, onlinestore_service_obj,))
     t1.start()
@@ -233,7 +244,8 @@ def main():
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/searchProducts',
         endpoint_name='searchProducts',
-        handler=search_products)
+        handler=search_products,
+        methods=['POST'])
 
     onlinestore_service_obj.add_endpoint(
         endpoint='/onlinestore-service/getProductInfo',
