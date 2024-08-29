@@ -29,12 +29,14 @@ class DynamoDBClient:
     def create_dynamodb_item(self, dynamo_table, ddb_item):
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)
-            ddb_table.put_item(Item=ddb_item)
+            res = ddb_table.put_item(Item=ddb_item,)
 
 
             # return self.dynamodb_client.update_item(TableName=dynamo_table,
             #                                  Key={primary_key: {"S": key_value}},
             #                                  AttributeUpdates=attribute_data)
+
+            return res['ResponseMetadata']['HTTPStatusCode']
 
         except ClientError as error:
             raise RuntimeError("Failed to enter item into Dynamo Table {} {}".format(dynamo_table, error))
@@ -68,7 +70,7 @@ class DynamoDBClient:
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)
             response = ddb_table.delete_item(Key=Key)
-            return response
+            return response['ResponseMetadata']['HTTPStatusCode']
             # return self.dynamodb_client.delete_item(TableName=dynamo_table,
             #                                  Key={primary_key: {"S": key_value}})
         except ClientError as error:
