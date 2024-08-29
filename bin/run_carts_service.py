@@ -11,6 +11,7 @@ from src.flask_service_v2 import FlaskServiceV2
 from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
 from src.dynamodb import DynamoDBClient
+from src.utils import DecimalEncoder
 from time import sleep
 
 logging.basicConfig(
@@ -82,7 +83,17 @@ def create_cart(**kwargs):
             'products': {}
         }
 
-        res = dynamodbclient.create_dynamodb_item('carts', ddb_item)
+        status_code = dynamodbclient.create_dynamodb_item('carts', ddb_item)
+
+        if status_code == 200:
+            res = {
+                'cart_id': cart_id,
+                'user_id': user_id
+            }
+        
+        else:
+            logger.error('DynamoDB Error')
+            return (json.dumps({}), 200, {})
 
         return (json.dumps(res), 200, {})
     
@@ -113,7 +124,7 @@ def get_cart(**kwargs):
 
         res = dynamodbclient.get_dynamodb_item('carts', Key)
 
-        return (json.dumps(res), 200, {})
+        return (json.dumps(res, cls=DecimalEncoder), 200, {})
 
     except Exception as e:
         logger.error(e)
@@ -151,9 +162,12 @@ def addToCart(**kwargs):
             ":quantity": quantity
         }
 
-        res = dynamodbclient.update_dynamodb_item('carts', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
+        status_code = dynamodbclient.update_dynamodb_item('carts', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
 
-        return ('Added to Cart', 200, {})
+        if status_code == 200:
+            return (' {} added to Cart {}'.format(product_id, cart_id), 200, {})
+        else:
+            raise Exception('DynamoDB Error')
 
     except Exception as e:
         logger.error(e)
@@ -186,9 +200,12 @@ def removeFromCart(**kwargs):
         }
         ExpressionAttributeValues = None
 
-        res = dynamodbclient.update_dynamodb_item('carts', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
+        status_code = dynamodbclient.update_dynamodb_item('carts', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
 
-        return ('', 200, {})
+        if status_code == 200:
+            return ('', 200, {})
+        else:
+            raise Exception('DynamoDB Error')
 
     except Exception as e:
         logger.error(e)
@@ -215,9 +232,12 @@ def deleteCart(**kwargs):
             secondary_key: secondary_key_value
         }
 
-        res = dynamodbclient.delete_dynamodb_item('carts', Key)
+        status_code = dynamodbclient.delete_dynamodb_item('carts', Key)
 
-        return ('Cart {} for user_id {} deleted'.format(cart_id, user_id), 200, {})
+        if status_code == 200:
+            return ('Cart {} for user_id {} deleted'.format(cart_id, user_id), 200, {})
+        else:
+            raise Exception('DynamoDB Error')
 
     except Exception as e:
         logger.error(e)
