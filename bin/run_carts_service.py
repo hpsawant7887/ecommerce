@@ -156,7 +156,7 @@ def addToCart(**kwargs):
 
         UpdateExpression = 'SET products.#product_id = :quantity'
         ExpressionAttributeNames = {
-            "#product_id": product_id
+            "#product_id": str(product_id)
         }
         ExpressionAttributeValues = {
             ":quantity": quantity
@@ -196,7 +196,7 @@ def removeFromCart(**kwargs):
 
         UpdateExpression = "REMOVE products.#product_id"
         ExpressionAttributeNames = {
-            "#product_id": product_id
+            "#product_id": str(product_id)
         }
         ExpressionAttributeValues = None
 
@@ -278,7 +278,7 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
 
                 dynamodbclient = cart_service_obj.dynamodbclient
 
-                res = dynamodbclient.delete_dynamo_item('carts', Key)
+                status_code = dynamodbclient.delete_dynamo_item('carts', Key)
 
             else:
                 #illegal messageType
