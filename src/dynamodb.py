@@ -1,8 +1,11 @@
 import os
 import json
 import boto3
+import logging
 
 from botocore.exceptions import ClientError
+
+logger = logging.getLogger(__name__)
 
 class DynamoDBClient:
     def __init__(self):
@@ -44,25 +47,37 @@ class DynamoDBClient:
 
     def update_dynamodb_item(self, dynamo_table, Key, UpdateExpression, ExpressionAttributeValues=None, ExpressionAttributeNames=None, ConditionExpression=None):
         try:
-           ddb_table = self.dynamodb_res.Table(dynamo_table)
-           if ExpressionAttributeNames and ConditionExpression:
-               response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
+            ddb_table = self.dynamodb_res.Table(dynamo_table)
+            if ExpressionAttributeNames and ConditionExpression:
+                response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
                                                 ExpressionAttributeValues=ExpressionAttributeValues,
                                                 ExpressionAttributeNames=ExpressionAttributeNames,
                                                 ConditionExpression=ConditionExpression,
                                                 ReturnValues="UPDATED_NEW")
-           elif ExpressionAttributeNames:
-              response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
+                
+            elif ExpressionAttributeNames and ExpressionAttributeValues:
+                response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
                                                ExpressionAttributeValues=ExpressionAttributeValues,
                                                ExpressionAttributeNames=ExpressionAttributeNames,
                                                ReturnValues="UPDATED_NEW")
-           else:
-              response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
+               
+            elif ExpressionAttributeNames and not ExpressionAttributeValues:
+                 response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
+                                               ExpressionAttributeNames=ExpressionAttributeNames,
+                                               ReturnValues="UPDATED_NEW")
+                 
+            elif ExpressionAttributeValues and not ExpressionAttributeNames:
+                response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
                                                ExpressionAttributeValues=ExpressionAttributeValues,
                                                ReturnValues="UPDATED_NEW")
 
-           return response['ResponseMetadata']['HTTPStatusCode']
+            else:
+              response = ddb_table.update_item(Key=Key, UpdateExpression=UpdateExpression,
+                                               ReturnValues="UPDATED_NEW")
+
+            return response['ResponseMetadata']['HTTPStatusCode']
         except ClientError as error:
+               logger = logging.getLogger(__name__)
                raise RuntimeError("Failed to update Dynamo Table {}".format(dynamo_table))
 
 
