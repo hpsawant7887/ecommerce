@@ -33,6 +33,7 @@ COPY src/sqs.py /opt/shipping_service/src/
 COPY src/__init__.py /opt/shipping_service/src/
 COPY sql/shipping_schema.sql /opt/shipping_service/sql/
 COPY src/k8s_utils.py /opt/shipping_service/src/
+COPY src/utils.py /opt/carts_service/src/
 #COPY test/test_users.py /opt/users_service/test/
 
 # Install dependencies
