@@ -2,6 +2,7 @@ import os
 import threading
 import hashlib
 import json
+import logging
 import uuid
 import requests
 
@@ -12,6 +13,14 @@ from time import sleep
 from src.k8s_utils import get_service_endpoint
 
 SQL_FILE = 'sql/shipping_schema.sql'
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+logger = logging.getLogger(__name__)
 
 
 def health_check(**kwargs):
@@ -54,7 +63,8 @@ def create_shipment(**kwargs):
 
         return (json.dumps({'shipment_id': shipment_id, 'status': shipment_status}), 200, {'Content-Type': 'application/json'})
     except Exception as e:
-        return ('Internal Server Error', 500, {})  
+        logger.error(e)
+        return ('Internal Server Error', 500, {})
 
 
 def update_shipment(**kwargs):
@@ -66,6 +76,13 @@ def update_shipment(**kwargs):
 
         shipment_id = data['shipmentId']
         shipment_status = data['status']
+
+        if shipment_status == 'SHIPPED':
+            msg_type = "OrderShipped"
+        elif shipment_status == 'DELIVERED':
+            msg_type = "OrderDelivered"
+        else:
+            raise Exception('Incorrect shipment status {}'.format(shipment_status))
 
         kwargs["mysqlclientObj"].setConnection()
 
@@ -84,11 +101,11 @@ def update_shipment(**kwargs):
         sqs_queue_url = os.environ['SQS_QUEUE_URL_SHIPPING_TO_ORDERING']
 
         sqs_msg = {
-            'type': 'OrderShipped',
+            'type': msg_type,
             'shipment_id': res[0],
             'user_id': res[1],
             'order_id': res[2],
-            'status': res[3]
+            'shipment_status': res[3]
         }
 
         sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
@@ -98,6 +115,7 @@ def update_shipment(**kwargs):
         return (json.dumps({'shipment_id': shipment_id, 'status': shipment_status}), 200, {'Content-Type': 'application/json'})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -120,6 +138,7 @@ def get_shipment_info(**kwargs):
         return (json.dumps(res), 200, {'Content-Type': 'application/json'})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
     
 
@@ -132,15 +151,27 @@ def get_all_shipments(**kwargs):
 
         kwargs["mysqlclientObj"].setConnection()
         
-        query = "SELECT * from shpipping.shipments where user_id={}".format(user_id)
+        query = "SELECT shipment_id,order_id,user_id,status from shpipping.shipments where user_id={}".format(user_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
         kwargs["mysqlclientObj"].closeConnection()
 
-        return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+        shipments = {'shipments': []}
+
+        for shipment in res:
+            s = {}
+            s['shipmentId'] = shipment[0]
+            s['orderId'] = shipment[1]
+            s['userId'] = shipment[2]
+            s['shipment_status'] = shipment[3]
+
+            shipments['shipments'].append(s)
+
+        return (json.dumps(shipments), 200, {'Content-Type': 'application/json'})
 
     except Exception as e:
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -148,24 +179,28 @@ def start_sqs_listener(sqs_queue_url, shipping_service_obj):
     sqs_client_obj = SqsClient()
 
     while True:
-        sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
+        try:
+            sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
-        if 'Messages' not in sqs_messages:
-            sleep(300)
+            if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
+                sleep(300)
+                continue
+
+            for sqs_message in sqs_messages['Messages']:
+                msg = json.loads(sqs_message['Body'])
+                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+
+                if msg['type'] == "NewOrderPlaced":
+                    order_id = msg['order_id']
+                    user_id = msg['user_id']
+
+                    create_shipment(mysqlclientObj=shipping_service_obj.mysqlclientObj, user_id=user_id, order_id=order_id)
+                else:
+                    #illegal messageType
+                    pass
+        except Exception as e:
+            logger.error(e)
             continue
-
-        for sqs_message in sqs_messages['Messages']:
-            msg = json.loads(sqs_message['Body'])
-            sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
-
-            if msg['type'] == "NewOrderReceived":
-                order_id = msg['order_id']
-                user_id = msg['user_id']
-
-                create_shipment(mysqlclientObj=shipping_service_obj.mysqlclientObj, user_id=user_id, order_id=order_id)
-            else:
-                #illegal messageType
-                pass
 
 
 def main():

@@ -10,6 +10,7 @@ from flask import request
 from src.flask_service_v2 import FlaskServiceV2
 from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
+from src.utils import DecimalEncoder
 from time import sleep
 
 logging.basicConfig(
@@ -113,7 +114,7 @@ def placeOrder(**kwargs):
         sqs_client_obj = SqsClient()
 
         sqs_msg = {
-            'type': 'OrderPlaced',
+            'type': 'NewOrderPlaced',
             'order_id': order_id,
             'cart_id': cart_id,
             'user_id': user_id,
@@ -167,7 +168,7 @@ def getOrderStatus(**kwargs):
 
         res = dynamodbclient.get_dynamodb_item('orders', Key)
 
-        return (json.dumps(res), 200, {})
+        return (json.dumps(res, cls=DecimalEncoder), 200, {})
 
     except Exception as e:
         logger.error(e)
@@ -178,43 +179,48 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
     sqs_client_obj = SqsClient()
 
     while True:
-        sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
+        try:
+            sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
-        if 'Messages' not in sqs_messages:
-            sleep(300)
+            if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
+                sleep(300)
+                continue
+
+            for sqs_message in sqs_messages['Messages']:
+                msg = json.loads(sqs_message['Body'])
+                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+
+                if msg['type'] == "OrderShipped" or msg['type'] == "OrderDelivered":
+                    order = {
+                        "order_id": msg['order_id'],
+                        "status": msg['shipment_status']
+                    }
+                    dynamodbclient = ordering_service_obj.dynamodbclient
+
+                    #update order status in dynamodb
+                    Key = {
+                        'order_id': order['order_id']
+                    }
+
+                    UpdateExpression = 'SET #status = :order_status'
+
+                    ExpressionAttributeNames = {
+                        "#status": "status"
+                    }
+            
+                    ExpressionAttributeValues = {
+                        ":order_status": order['status']
+                    }
+
+                    res = dynamodbclient.update_dynamodb_item('orders', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
+
+                else:
+                    #illegal messageType
+                    logger.error('Illegal message type {}'.format(msg['type']))
+                    pass
+        except Exception as e:
+            logger.error(e)
             continue
-
-        for sqs_message in sqs_messages['Messages']:
-            msg = json.loads(sqs_message['Body'])
-            sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
-
-            if msg['type'] == "OrderShipped":
-                order = {
-                    "order_id": msg['order_id'],
-                    "status": msg['shipping_status']
-                }
-                dynamodbclient = ordering_service_obj.dynamodbclient
-
-                #update order status in dynamodb
-                Key = {
-                    'order_id': order['order_id']
-                }
-
-                UpdateExpression = 'SET #status = :order_status'
-
-                ExpressionAttributeNames = {
-                    "#status": "status"
-                }
-        
-                ExpressionAttributeValues = {
-                    ":order_status": order['status']
-                }
-
-                res = dynamodbclient.update_dynamodb_item('orders', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
-
-            else:
-                #illegal messageType
-                pass
 
 def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_SHIPPING_TO_ORDERING']

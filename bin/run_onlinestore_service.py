@@ -28,29 +28,33 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
     sqs_client_obj = SqsClient()
 
     while True:
-        sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
+        try:
+            sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
-        if 'Messages' not in sqs_messages:
-            sleep(300)
+            if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
+                sleep(300)
+                continue
+
+            for sqs_message in sqs_messages['Messages']:
+                msg = json.loads(sqs_message['Body'])
+                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+
+                if msg['type'] == "NewOrderPlaced":
+                    order = {
+                        "order_id": msg['order_id'],
+                        "products": msg['products']
+                    }
+
+                    for product in order["products"]:
+                        product_id = product['product_id']
+                        quantity = product['quantity']
+                        decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclient, product_id=product_id, quantity=quantity)
+                else:
+                    #illegal messageType
+                    pass
+        except Exception as e:
+            logger.error(e)
             continue
-
-        for sqs_message in sqs_messages['Messages']:
-            msg = json.loads(sqs_message['Body'])
-            sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
-
-            if msg['type'] == "NewOrderReceived":
-                order = {
-                    "order_id": msg['order_id'],
-                    "products": msg['products']
-                }
-
-                for product in order["products"]:
-                    product_id = product['product_id']
-                    quantity = product['quantity']
-                    decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclient, product_id=product_id, quantity=quantity)
-            else:
-                #illegal messageType
-                pass
 
 
 def health_check(**kwargs):

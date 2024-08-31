@@ -253,36 +253,40 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
     sqs_client_obj = SqsClient()
 
     while True:
-        sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
+        try:
+            sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
-        if 'Messages' not in sqs_messages:
-            sleep(300)
+            if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
+                sleep(300)
+                continue
+
+            for sqs_message in sqs_messages['Messages']:
+                msg = json.loads(sqs_message['Body'])
+                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+
+                if msg['type'] == "NewOrderPlaced":
+                    order = {
+                        "order_id": msg['order_id'],
+                        "cart_id": msg['cart_id']
+                    }
+
+                    cart_id = msg['cart_id']
+
+                    primary_key = 'cart_id'
+                    key_value = cart_id
+
+                    Key= {primary_key: key_value}
+
+                    dynamodbclient = cart_service_obj.dynamodbclient
+
+                    status_code = dynamodbclient.delete_dynamo_item('carts', Key)
+                else:
+                    #illegal messageType
+                    pass
+        except Exception as e:
+            logger.error(e)
             continue
-
-        for sqs_message in sqs_messages['Messages']:
-            msg = json.loads(sqs_message['Body'])
-            sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
-
-            if msg['type'] == "OrderPlaced":
-                order = {
-                    "order_id": msg['order_id'],
-                    "cart_id": msg['cart_id']
-                }
-
-                cart_id = msg['cart_id']
-
-                primary_key = 'cart_id'
-                key_value = cart_id
-
-                Key= {primary_key: key_value}
-
-                dynamodbclient = cart_service_obj.dynamodbclient
-
-                status_code = dynamodbclient.delete_dynamo_item('carts', Key)
-
-            else:
-                #illegal messageType
-                pass
+            
 
 def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_CARTS']
