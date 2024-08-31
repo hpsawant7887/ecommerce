@@ -32,7 +32,7 @@ COPY src/mysqlclient.py /opt/onlinestore_service/src/
 COPY src/sqs.py /opt/onlinestore_service/src/
 COPY src/__init__.py /opt/onlinestore_service/src/
 COPY src/k8s_utils.py /opt/onlinestore_service/src/
-COPY src/utils.py /opt/carts_service/src/
+COPY src/utils.py /opt/onlinestore_service/src/
 COPY sql/onlinestore_schema.sql /opt/onlinestore_service/sql/
 #COPY test/test_users.py /opt/users_service/test/
 
