@@ -10,6 +10,7 @@ import requests
 from flask import request
 from src.flask_service import FlaskService
 from src.sqs import SqsClient
+from src.utils import DecimalEncoder
 from time import sleep
 from src.k8s_utils import get_service_endpoint
 
@@ -131,7 +132,7 @@ def get_product(**kwargs):
 
     kwargs["mysqlclientObj"].closeConnection()
 
-    return (json.dumps(product_info), 200, {'Content-Type': 'application/json'})
+    return (json.dumps(product_info, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
     
 @verify_auth_header
@@ -161,7 +162,7 @@ def search_products(**kwargs):
 
         products['products'].append(p)
 
-    return (json.dumps(products), 200, {'Content-Type': 'application/json'})
+    return (json.dumps(products, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
 
 def add_product(**kwargs):

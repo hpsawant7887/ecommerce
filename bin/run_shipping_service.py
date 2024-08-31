@@ -11,6 +11,7 @@ from src.flask_service import FlaskService
 from src.sqs import SqsClient
 from time import sleep
 from src.k8s_utils import get_service_endpoint
+from src.utils import DecimalEncoder
 
 SQL_FILE = 'sql/shipping_schema.sql'
 
@@ -131,11 +132,19 @@ def get_shipment_info(**kwargs):
         
         query = "SELECT * from shpipping.shipments where shipment_id={}".format(shipment_id)
 
-        res = kwargs["mysqlclientObj"].executeQuery(query)
+        res = kwargs["mysqlclientObj"].executeQuery(query)[0]
 
         kwargs["mysqlclientObj"].closeConnection()
 
-        return (json.dumps(res), 200, {'Content-Type': 'application/json'})
+        shipment_info = {
+            "shipment_id": res[0],
+            "order_id": res[1],
+            "user_id": res[2],
+            "shipment_destination": res[3],
+            "shipment_status": res[4]
+        }
+
+        return (json.dumps(shipment_info, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
     except Exception as e:
         logger.error(e)
@@ -168,7 +177,7 @@ def get_all_shipments(**kwargs):
 
             shipments['shipments'].append(s)
 
-        return (json.dumps(shipments), 200, {'Content-Type': 'application/json'})
+        return (json.dumps(shipments, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
     except Exception as e:
         logger.error(e)
