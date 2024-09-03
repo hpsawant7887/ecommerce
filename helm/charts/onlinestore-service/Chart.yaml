@@ -2,8 +2,8 @@ apiVersion: v2
 name: onlinestore-service
 description: A Helm chart for onlinestore-service
 type: application
-version: 1.1.1
-appVersion: 1.2.1
+version: 1.1.2
+appVersion: 1.2.2
 maintainers:
   - name: hpsawant
     email: hpsawant2013@gmail.com
