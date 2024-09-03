@@ -1,5 +1,5 @@
 apiVersion: v2
-name: onlinestore-service
+name: shipping-service
 description: A Helm chart for shipping-service
 type: application
 version: 0.1.6
