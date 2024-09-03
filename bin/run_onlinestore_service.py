@@ -41,6 +41,8 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                 msg = json.loads(sqs_message['Body'])
                 logger.info('SQS Message - {}'.format(msg))
 
+                logger.info('msg type is {}'.format(type(msg)))
+
                 if msg['type'] == "NewOrderPlaced":
                     order = {
                         "order_id": msg['order_id'],
