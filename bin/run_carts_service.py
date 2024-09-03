@@ -110,7 +110,7 @@ def get_cart(**kwargs):
     
     try:
         cart_id = request.args.get('cartId')
-        user_id = request.args.get('userId')
+        user_id = int(request.args.get('userId'))
 
         dynamodbclient = kwargs['dynamodbclient']
         dynamodbclient.set_creds()
@@ -140,7 +140,7 @@ def addToCart(**kwargs):
         return ('Invalid method', 400, {})
     try:
         data = request.get_json(force=True)
-        user_id = data['userId']
+        user_id = int(data['userId'])
         cart_id = data['cartId']
         product_id = data['productId']
         quantity = data['quantity']
@@ -183,7 +183,7 @@ def removeFromCart(**kwargs):
     try:
         data = request.get_json(force=True)
         cart_id = data['cartId']
-        user_id = data['userId']
+        user_id = int(data['userId'])
         product_id = data['productId']
 
         dynamodbclient = kwargs['dynamodbclient']
@@ -222,7 +222,7 @@ def deleteCart(**kwargs):
     try:
         data = request.get_json(force=True)
         cart_id = data['cartId']
-        user_id = data['userId']
+        user_id = int(data['userId'])
 
         dynamodbclient = kwargs['dynamodbclient']
         dynamodbclient.set_creds()

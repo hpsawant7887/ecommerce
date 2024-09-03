@@ -76,7 +76,7 @@ def placeOrder(**kwargs):
     try:
         data = request.get_json(force=True)
         cart_id = data['cartId']
-        user_id = data['userId']
+        user_id = int(data['userId'])
 
 
         order_id = get_unique_order_id()
@@ -152,7 +152,7 @@ def getOrderStatus(**kwargs):
         return ('Invalid Method', 400, {})
     
     try:
-        user_id = request.args.get('userId')
+        user_id = int(request.args.get('userId'))
         order_id = request.args.get('orderId')
 
         dynamodbclient = kwargs['dynamodbclient']

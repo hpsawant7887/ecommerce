@@ -113,11 +113,11 @@ def get_product(**kwargs):
     if request.method != 'GET':
         return ('Invalid method', 400, {})
     
-    product_id = request.args.get('productId')
+    product_id = int(request.args.get('productId'))
 
     kwargs["mysqlclientObj"].setConnection()
 
-    query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id='{}'".format(product_id)
+    query = "SELECT product_id,product_name,product_description,price,available_quantity from onlinestore.products WHERE product_id={}".format(product_id)
 
     res = kwargs["mysqlclientObj"].executeQuery(query)[0]
 

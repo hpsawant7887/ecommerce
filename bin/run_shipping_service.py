@@ -43,11 +43,11 @@ def create_shipment(**kwargs):
     try:
         shipment_id = get_unique_shipment_id()
         order_id = kwargs['order_id']
-        user_id = kwargs['user_id']
+        user_id = int(kwargs['user_id'])
 
         users_service_endpoint = get_service_endpoint('demo-eshop-users-service', 'users-service')
 
-        users_service_url = 'http://{}/users-service-internal/getUserAddress'.format(users_service_endpoint)
+        users_service_url = 'http://{}/users-service-internal/getUserAddress?userId={}'.format(users_service_endpoint, user_id)
 
         resp = requests.get(users_service_url)
 
@@ -75,7 +75,7 @@ def update_shipment(**kwargs):
         
         data = request.get_json(force=True)
 
-        shipment_id = data['shipmentId']
+        shipment_id = int(data['shipmentId'])
         shipment_status = data['status']
 
         if shipment_status == 'SHIPPED':
@@ -126,7 +126,7 @@ def get_shipment_info(**kwargs):
         if request.method != 'GET':
             return ('Invalid method', 400, {})
         
-        shipment_id = request.args.get('shipmentId')
+        shipment_id = int(request.args.get('shipmentId'))
 
         kwargs["mysqlclientObj"].setConnection()
         
@@ -156,7 +156,7 @@ def get_all_shipments(**kwargs):
         if request.method != 'GET':
             return ('Invalid method', 400, {})
         
-        user_id = request.args.get('userId')
+        user_id = int(request.args.get('userId'))
 
         kwargs["mysqlclientObj"].setConnection()
         
