@@ -37,6 +37,8 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
 
             logger.info('Received SQS messages')
 
+            onlinestore_service_obj.mysqlclient.setConnection()
+
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
                 logger.info('SQS Message - {}'.format(msg))
@@ -59,6 +61,8 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                 else:
                     logger.error('Illegal SQS message type')
                     sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+            
+            onlinestore_service_obj.mysqlclient.closeConnection()
         except Exception as e:
             onlinestore_db_rollback(mysqlclientObj=onlinestore_service_obj.mysqlclient)
             logger.error(e)

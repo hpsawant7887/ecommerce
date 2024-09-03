@@ -31,7 +31,7 @@ class SqsClient:
     
 
     def send_sqs_msg(self, sqs_queue_url, message):
-        self.sqs_client.send_message(QueueUrl=sqs_queue_url, MessageBody=json.dumps(message))
+        self.sqs_client.send_message(QueueUrl=sqs_queue_url, MessageBody=message)
 
     def delete_sqs_msg(self, sqs_queue_url, sqs_message_receipt):
         self.sqs_client.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=sqs_message_receipt)
