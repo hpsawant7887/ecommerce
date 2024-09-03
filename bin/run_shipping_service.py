@@ -162,7 +162,7 @@ def get_all_shipments(**kwargs):
 
         kwargs["mysqlclientObj"].setConnection()
         
-        query = "SELECT shipment_id,order_id,user_id,status from shpipping.shipments where user_id={}".format(user_id)
+        query = "SELECT shipment_id,order_id,user_id,status from shipping.shipments where user_id={}".format(user_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
