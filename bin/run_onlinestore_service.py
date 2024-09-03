@@ -51,9 +51,7 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                         "products": msg['products']
                     }
 
-                    for product in order["products"]:
-                        product_id = product['product_id']
-                        quantity = product['quantity']
+                    for product_id, quantity in order["products"].items():
                         decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclient, product_id=product_id, quantity=quantity)
                     
                     onlinestore_db_commit(mysqlclientObj=onlinestore_service_obj.mysqlclient)

@@ -282,8 +282,13 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
 
                     primary_key = 'cart_id'
                     key_value = cart_id
+                    secondary_key = 'user_id'
+                    secondary_key_value = int(msg['user_id'])
 
-                    Key= {primary_key: key_value}
+                    Key= {
+                        primary_key: key_value,
+                        secondary_key: secondary_key_value
+                    }
 
                     dynamodbclient = cart_service_obj.dynamodbclient
                     dynamodbclient.set_creds()
