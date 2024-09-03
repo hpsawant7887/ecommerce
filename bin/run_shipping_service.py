@@ -58,7 +58,7 @@ def create_shipment(**kwargs):
 
         kwargs["mysqlclientObj"].setConnection()
 
-        query = "INSERT into shipping.shipments (shipment_id,order_id,user_id,destination,status) VALUES ({},{},{},'{}','{}')".format(shipment_id, order_id, user_id, destination, shipment_status)
+        query = "INSERT into shipping.shipments (shipment_id,order_id,user_id,destination,status) VALUES ({},'{}',{},'{}','{}')".format(shipment_id, order_id, user_id, destination, shipment_status)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
