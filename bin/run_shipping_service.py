@@ -197,8 +197,11 @@ def start_sqs_listener(sqs_queue_url, shipping_service_obj):
                 sleep(300)
                 continue
 
+            logger.info('Received SQS messages')
+
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
+                logger.info('SQS Message - {}'.format(msg))
 
                 if msg['type'] == "NewOrderPlaced":
                     order_id = msg['order_id']
