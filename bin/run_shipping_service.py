@@ -109,7 +109,7 @@ def update_shipment(**kwargs):
             'shipment_status': res[3]
         }
 
-        sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
+        sqs_client_obj.send_sqs_msg(sqs_queue_url, json.dumps(sqs_msg, cls=DecimalEncoder))
 
         kwargs["mysqlclientObj"].closeConnection()
 

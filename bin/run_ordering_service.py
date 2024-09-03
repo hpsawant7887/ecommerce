@@ -128,18 +128,18 @@ def placeOrder(**kwargs):
 
         # send sqs message to Shipping
         sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_SHIPPING']
-        sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
+        sqs_client_obj.send_sqs_msg(sqs_queue_url, json.dumps(sqs_msg, cls=DecimalEncoder))
 
         # send sqs message to OnlineStore
         sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_ONLINESTORE']
-        sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
+        sqs_client_obj.send_sqs_msg(sqs_queue_url, json.dumps(sqs_msg, cls=DecimalEncoder))
 
         # send sqs message to delete the cart
         sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_CARTS']
-        sqs_client_obj.send_sqs_msg(sqs_queue_url, sqs_msg)
+        sqs_client_obj.send_sqs_msg(sqs_queue_url, json.dumps(sqs_msg, cls=DecimalEncoder))
 
         # return ddb response
-        return (json.dumps(ddb_res), 200, {})
+        return (json.dumps(ddb_res, cls=DecimalEncoder), 200, {})
 
     except Exception as e:
         logger.error(e)
