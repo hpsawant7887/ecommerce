@@ -89,7 +89,7 @@ def update_shipment(**kwargs):
 
         kwargs["mysqlclientObj"].setConnection()
 
-        query = "UPDATE shipping.shipments SET status = {} WHERE shipment_id={}".format(shipment_status, shipment_id)
+        query = "UPDATE shipping.shipments SET status = '{}' WHERE shipment_id={}".format(shipment_status, shipment_id)
 
         res = kwargs["mysqlclientObj"].executeQuery(query)
 
