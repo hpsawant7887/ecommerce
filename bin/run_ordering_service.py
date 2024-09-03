@@ -99,6 +99,10 @@ def placeOrder(**kwargs):
 
         products = cart_item['products']
 
+        if len(products) < 1:
+            logger.info('cart with id {} is empty'.format(cart_id))
+            return ('Cart is Empty, please put some products in cart', 200, {})
+
         # create dynamodb record in orders table
 
         ddb_item = {
@@ -189,7 +193,7 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
 
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
-                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+                
 
                 if msg['type'] == "OrderShipped" or msg['type'] == "OrderDelivered":
                     order = {
@@ -216,8 +220,11 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
                         ":order_status": order['status']
                     }
 
-                    res = dynamodbclient.update_dynamodb_item('orders', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
+                    status_code = dynamodbclient.update_dynamodb_item('orders', Key, UpdateExpression, ExpressionAttributeValues, ExpressionAttributeNames)
 
+                    if status_code == 200:
+                        logger.info('Successfully updated Order Status')
+                        sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
                 else:
                     #illegal messageType
                     logger.error('Illegal message type {}'.format(msg['type']))

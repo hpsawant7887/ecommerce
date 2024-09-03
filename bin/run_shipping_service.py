@@ -62,10 +62,10 @@ def create_shipment(**kwargs):
 
         kwargs["mysqlclientObj"].commit()
 
-        return (json.dumps({'shipment_id': shipment_id, 'status': shipment_status}), 200, {'Content-Type': 'application/json'})
+        return True
     except Exception as e:
         logger.error(e)
-        return ('Internal Server Error', 500, {})
+        return False
 
 
 def update_shipment(**kwargs):
@@ -197,13 +197,14 @@ def start_sqs_listener(sqs_queue_url, shipping_service_obj):
 
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
-                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
 
                 if msg['type'] == "NewOrderPlaced":
                     order_id = msg['order_id']
                     user_id = msg['user_id']
 
-                    create_shipment(mysqlclientObj=shipping_service_obj.mysqlclientObj, user_id=user_id, order_id=order_id)
+                    r = create_shipment(mysqlclientObj=shipping_service_obj.mysqlclient, user_id=user_id, order_id=order_id)
+                    if r:
+                        sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
                 else:
                     #illegal messageType
                     pass

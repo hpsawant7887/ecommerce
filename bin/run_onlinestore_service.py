@@ -35,9 +35,11 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                 sleep(300)
                 continue
 
+            logger.info('Received SQS messages')
+
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
-                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+                logger.info('SQS Message - {}'.format(msg))
 
                 if msg['type'] == "NewOrderPlaced":
                     order = {
@@ -49,10 +51,14 @@ def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
                         product_id = product['product_id']
                         quantity = product['quantity']
                         decrease_product_count(mysqlclientObj=onlinestore_service_obj.mysqlclient, product_id=product_id, quantity=quantity)
+                    
+                    onlinestore_db_commit(mysqlclientObj=onlinestore_service_obj.mysqlclient)
+                    sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
                 else:
-                    #illegal messageType
-                    pass
+                    logger.error('Illegal SQS message type')
+                    sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
         except Exception as e:
+            onlinestore_db_rollback(mysqlclientObj=onlinestore_service_obj.mysqlclient)
             logger.error(e)
             continue
 
@@ -208,14 +214,22 @@ def increase_product_count(**kwargs):
 
 
 def decrease_product_count(**kwargs):
-    product_id = kwargs['product_id']
-    ordered_quantity = kwargs['quantity']
+    product_id = int(kwargs['product_id'])
+    ordered_quantity = int(kwargs['quantity'])
 
     query = "UPDATE onlinestore.products SET available_quantity = available_quantity - {} WHERE product_id={}".format(ordered_quantity, product_id)
 
+    logger.info('Executing SQL query {}'.format(query))
+
     res = kwargs["mysqlclientObj"].executeQuery(query)
 
+
+def onlinestore_db_commit(**kwargs):
     kwargs["mysqlclientObj"].commit()
+
+
+def onlinestore_db_rollback(**kwargs):
+    kwargs["mysqlclientObj"].rollback()
     
 
 def check_product_exists(**kwargs):

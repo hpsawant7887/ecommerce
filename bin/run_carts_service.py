@@ -265,14 +265,17 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
                 sleep(300)
                 continue
 
+            logger.info('Received SQS messages')
+
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
-                sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
+                logger.info('SQS Message - {}'.format(msg))
 
                 if msg['type'] == "NewOrderPlaced":
                     order = {
                         "order_id": msg['order_id'],
-                        "cart_id": msg['cart_id']
+                        "cart_id": msg['cart_id'],
+                        "user_id": msg['user_id']
                     }
 
                     cart_id = msg['cart_id']
@@ -285,9 +288,14 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
                     dynamodbclient = cart_service_obj.dynamodbclient
                     dynamodbclient.set_creds()
 
-                    status_code = dynamodbclient.delete_dynamo_item('carts', Key)
+                    status_code = dynamodbclient.delete_dynamodb_item('carts', Key)
+
+                    if status_code == 200:
+                        logger.info('Sucessfully deleted cart')
+                        sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
                 else:
-                    #illegal messageType
+                    logger.error('Illegal SQS message Type in SQS message - {}'.format(msg))
+                    sqs_client_obj.delete_sqs_msg(sqs_queue_url, sqs_message['ReceiptHandle'])
                     pass
         except Exception as e:
             logger.error(e)
