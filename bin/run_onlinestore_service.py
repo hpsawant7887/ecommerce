@@ -26,10 +26,9 @@ SQL_FILE = 'sql/onlinestore_schema.sql'
 
 
 def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
-    sqs_client_obj = SqsClient()
-
     while True:
         try:
+            sqs_client_obj = SqsClient()
             sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
             if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
