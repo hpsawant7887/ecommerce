@@ -82,6 +82,7 @@ def placeOrder(**kwargs):
         order_id = get_unique_order_id()
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'cart_id'
         key_value = cart_id
@@ -155,6 +156,7 @@ def getOrderStatus(**kwargs):
         order_id = request.args.get('orderId')
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'order_id'
         key_value = order_id
@@ -176,10 +178,9 @@ def getOrderStatus(**kwargs):
     
 
 def start_sqs_listener(sqs_queue_url, ordering_service_obj):
-    sqs_client_obj = SqsClient()
-
     while True:
         try:
+            sqs_client_obj = SqsClient()
             sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
             if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
@@ -193,13 +194,16 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
                 if msg['type'] == "OrderShipped" or msg['type'] == "OrderDelivered":
                     order = {
                         "order_id": msg['order_id'],
+                        "user_id": msg['user_id'],
                         "status": msg['shipment_status']
                     }
                     dynamodbclient = ordering_service_obj.dynamodbclient
+                    dynamodbclient.set_creds()
 
                     #update order status in dynamodb
                     Key = {
-                        'order_id': order['order_id']
+                        'order_id': order['order_id'],
+                        'user_id': order['user_id']
                     }
 
                     UpdateExpression = 'SET #status = :order_status'

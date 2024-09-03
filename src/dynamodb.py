@@ -9,22 +9,27 @@ logger = logging.getLogger(__name__)
 
 class DynamoDBClient:
     def __init__(self):
-        role_arn = os.getenv('AWS_ROLE_ARN')
-
+        self.role_arn = os.getenv('AWS_ROLE_ARN')
         with open(os.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"), 'r') as content_file:
             web_identity_token = content_file.read()
-        
-        role = boto3.client('sts').assume_role_with_web_identity(RoleArn=role_arn, RoleSessionName='assume-role',
-                                                             WebIdentityToken=web_identity_token)
+
+        self.web_identity_token = web_identity_token
+
+    
+    def set_creds(self):
+        role = boto3.client('sts').assume_role_with_web_identity(RoleArn=self.role_arn, RoleSessionName='assume-role',
+                                                             WebIdentityToken=self.web_identity_token)
         
         credentials = role['Credentials']
         aws_access_key_id = credentials['AccessKeyId']
         aws_secret_access_key = credentials['SecretAccessKey']
         aws_session_token = credentials['SessionToken']
-        
+
+
         session = boto3.session.Session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key,
                               aws_session_token=aws_session_token)
         
+
         self.dynamodb_client = session.client('dynamodb')
         self.dynamodb_res = session.resource('dynamodb')
 

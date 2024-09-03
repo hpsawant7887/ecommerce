@@ -75,6 +75,8 @@ def create_cart(**kwargs):
         user_id = int(data['userId'])
         dynamodbclient = kwargs['dynamodbclient']
 
+        dynamodbclient.set_creds()
+
         cart_id = get_unique_cart_id()
 
         ddb_item = {
@@ -111,6 +113,7 @@ def get_cart(**kwargs):
         user_id = request.args.get('userId')
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'cart_id'
         key_value = cart_id
@@ -143,6 +146,7 @@ def addToCart(**kwargs):
         quantity = data['quantity']
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'cart_id'
         key_value = cart_id
@@ -183,6 +187,7 @@ def removeFromCart(**kwargs):
         product_id = data['productId']
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'cart_id'
         key_value = cart_id
@@ -220,6 +225,7 @@ def deleteCart(**kwargs):
         user_id = data['userId']
 
         dynamodbclient = kwargs['dynamodbclient']
+        dynamodbclient.set_creds()
 
         primary_key = 'cart_id'
         key_value = cart_id
@@ -250,10 +256,9 @@ def update_ddb(**kwargs):
 
 
 def start_sqs_listener(sqs_queue_url, cart_service_obj):
-    sqs_client_obj = SqsClient()
-
     while True:
         try:
+            sqs_client_obj = SqsClient()
             sqs_messages = sqs_client_obj.read_sqs_msg(sqs_queue_url)
 
             if 'Messages' not in sqs_messages or len(sqs_messages['Messages']) < 1:
@@ -278,6 +283,7 @@ def start_sqs_listener(sqs_queue_url, cart_service_obj):
                     Key= {primary_key: key_value}
 
                     dynamodbclient = cart_service_obj.dynamodbclient
+                    dynamodbclient.set_creds()
 
                     status_code = dynamodbclient.delete_dynamo_item('carts', Key)
                 else:
