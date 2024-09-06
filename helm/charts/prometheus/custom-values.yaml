@@ -1,0 +1,21 @@
+alertmanager:
+  enabled: false
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false
+serviceAccounts:
+  server:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::507326814593:role/ecomm_iam_role
+server:
+  persistentVolume:
+    storageClass: gp2
+  replicaCount: 2
+  statefulSet:
+    enabled: true
+  
+
+
