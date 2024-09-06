@@ -84,10 +84,14 @@ livenessProbe:
   httpGet:
     path: /onlinestore-service/healthCheck
     port: 8081
+  periodSeconds: 30
+  initialDelaySeconds: 5
 readinessProbe:
   httpGet:
     path: /onlinestore-service/healthCheck
     port: 8081
+  periodSeconds: 30
+  initialDelaySeconds: 5
 
 autoscaling:
   enabled: false

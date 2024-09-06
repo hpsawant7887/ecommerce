@@ -84,10 +84,14 @@ livenessProbe:
   httpGet:
     path: /carts-service/healthCheck
     port: 8082
+  periodSeconds: 30
+  initialDelaySeconds: 5
 readinessProbe:
   httpGet:
     path: /carts-service/healthCheck
     port: 8082
+  periodSeconds: 30
+  initialDelaySeconds: 5
 
 autoscaling:
   enabled: false

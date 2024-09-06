@@ -83,10 +83,14 @@ livenessProbe:
   httpGet:
     path: /users-service/healthCheck
     port: 8080
+  periodSeconds: 30
+  initialDelaySeconds: 5
 readinessProbe:
   httpGet:
     path: /users-service/healthCheck
     port: 8080
+  periodSeconds: 30
+  initialDelaySeconds: 5
 
 autoscaling:
   enabled: false

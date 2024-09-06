@@ -1,0 +1,9 @@
+apiVersion: v2
+description: A Helm chart for OpenTelemetry.
+name: opentelemetry-collector
+version: 0.104.0
+home: https://opentelemetry.io/
+dependencies:
+  - name: opentelemetry-collector
+    version: 0.104.0
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
