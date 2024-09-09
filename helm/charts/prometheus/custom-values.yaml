@@ -16,6 +16,11 @@ server:
   replicaCount: 2
   statefulSet:
     enabled: true
-  
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - targets:
+        - ecomm-opentelemetry-collector.observability.svc.cluster.local:9090
 
 

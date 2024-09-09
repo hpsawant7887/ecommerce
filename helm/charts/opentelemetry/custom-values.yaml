@@ -1,5 +1,15 @@
 mode: daemonset
 
+service:
+  enabled: true
+
+ports:
+  metrics:
+    enabled: true
+    containerPort: 9090
+    servicePort: 9090
+    protocol: TCP
+
 image:
   repository: otel/opentelemetry-collector-contrib
 
@@ -33,21 +43,21 @@ config:
         - type: router
           id: get-format
           routes:
-            - output: parser-docker
-              expr: 'body matches "^\\{"'
-            - output: parser-crio
-              expr: 'body matches "^[^ Z]+ "'
+            # - output: parser-docker
+            #   expr: 'body matches "^\\{"'
+            # - output: parser-crio
+            #   expr: 'body matches "^[^ Z]+ "'
             - output: parser-containerd
               expr: 'body matches "^[^ Z]+Z"'
         # Parse CRI-O format
-        - type: regex_parser
-          id: parser-crio
-          regex: '^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
-          output: extract_metadata_from_filepath
-          timestamp:
-            parse_from: attributes.time
-            layout_type: gotime
-            layout: '2006-01-02T15:04:05.999999999Z07:00'
+        # - type: regex_parser
+        #   id: parser-crio
+        #   regex: '^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+        #   output: extract_metadata_from_filepath
+        #   timestamp:
+        #     parse_from: attributes.time
+        #     layout_type: gotime
+        #     layout: '2006-01-02T15:04:05.999999999Z07:00'
         # Parse CRI-Containerd format
         - type: regex_parser
           id: parser-containerd
@@ -57,12 +67,12 @@ config:
             parse_from: attributes.time
             layout: '%Y-%m-%dT%H:%M:%S.%LZ'
         # Parse Docker format
-        - type: json_parser
-          id: parser-docker
-          output: extract_metadata_from_filepath
-          timestamp:
-            parse_from: attributes.time
-            layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+        # - type: json_parser
+        #   id: parser-docker
+        #   output: extract_metadata_from_filepath
+        #   timestamp:
+        #     parse_from: attributes.time
+        #     layout: '%Y-%m-%dT%H:%M:%S.%LZ'
         # Extract metadata from file path
         - type: regex_parser
           id: extract_metadata_from_filepath
@@ -86,13 +96,13 @@ config:
           to: resource["pod"]
         - type: add
           field: resource["cluster"]
-          value: 'your-cluster-name' # Set your cluster name here
+          value: 'demo-eshop-eks-cluster' # Set your cluster name here
         - type: move
           from: attributes.log
           to: body
   processors:
     batch:
-      send_batch_size: 10000
+      send_batch_size: 1000
       timeout: 5s
     resource:
       attributes:
@@ -101,12 +111,16 @@ config:
           value: raw
         - action: insert
           key: loki.resource.labels
-          value: pod, namespace, container, cluster, filename
+          value: pod,namespace,container,cluster,filename
   exporters:
+    logging:
+      verbosity: detailed
     prometheus:
       endpoint: "0.0.0.0:9090"
-    otlphttp:
+    otlphttp/loki:
       endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/otlp
+    loki: 
+      endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/loki/api/v1/push 
     otlp/honeycombtraces:
       endpoint: api.honeycomb.io:443
       headers:
@@ -114,9 +128,9 @@ config:
   service:
     pipelines:
       logs:
-        receivers: [otlp]
-        processors: [batch]
-        exporters: [otlphttp]
+        receivers: [filelog,otlp]
+        processors: [batch, resource]
+        exporters: [loki]
       metrics:
         receivers: [otlp]
         processors: [batch]
