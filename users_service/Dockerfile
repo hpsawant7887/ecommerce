@@ -42,6 +42,7 @@ RUN pip install flask
 RUN pip install opentelemetry-api
 RUN pip install opentelemetry-sdk
 RUN pip install opentelemetry-exporter-otlp-proto-grpc
+RUN pip install opentelemetry-exporter-otlp-proto-http
 
 # Setup the Users Service
 RUN python3 setup.py install users_service
