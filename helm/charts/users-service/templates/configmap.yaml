@@ -7,3 +7,4 @@ data:
   mysql_db_name: "users"
   mysql_user: "admin_user"
   otel_collector_endpoint: "http://ecomm-opentelemetry-collector.observability.svc.cluster.local:4318/v1/traces"
+  otel_service_name: users-service
