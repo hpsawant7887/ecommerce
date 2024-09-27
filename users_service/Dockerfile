@@ -32,12 +32,16 @@ COPY src/mysqlclient.py /opt/users_service/src/
 COPY src/__init__.py /opt/users_service/src/
 COPY sql/user_schema.sql /opt/users_service/sql/
 #COPY test/test_users.py /opt/users_service/test/
+COPY src/otel_tracer.py /opt/users_service/src/
 
 # Install dependencies
 RUN pip install setuptools
 RUN pip install pytest
 RUN pip install pymysql
 RUN pip install flask
+RUN pip install opentelemetry-api
+RUN pip install opentelemetry-sdk
+RUN pip install opentelemetry-exporter-otlp-proto-grpc
 
 # Setup the Users Service
 RUN python3 setup.py install users_service

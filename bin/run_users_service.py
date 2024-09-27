@@ -6,6 +6,8 @@ import uuid
 
 from flask import request
 from src.flask_service import FlaskService
+from src.otel_tracer import OtelTracer
+
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -16,8 +18,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SQL_FILE = 'sql/user_schema.sql'
+APP_NAME = 'demo-eshop-users-service'
+
+otel_tracer_obj = OtelTracer(APP_NAME)
 
 
+@otel_tracer_obj.tracer.start_as_current_span('register_user_action')
 def register_user_action(mysqlclientObj):
     if request.method != 'POST':
         # return error
@@ -57,7 +63,7 @@ def register_user_action(mysqlclientObj):
 
     except Exception as e:
         # return error
-        logging.error(e)
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -96,12 +102,12 @@ def verify_auth_header(func):
 
             return func(mysqlclientObj)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return ('Internal Server Error', 500, {})
 
     return wrapper
 
-
+@otel_tracer_obj.tracer.start_as_current_span('get_user_info')
 @verify_auth_header
 def get_user_info(mysqlclientObj):
     user_info_query = "SELECT user_id, username, first_name, last_name, email, user_address from users.user_info WHERE username='{}'".format(
@@ -123,6 +129,7 @@ def get_user_info(mysqlclientObj):
     return (json.dumps(user_info), 200, {'Content-Type': 'application/json'})
 
 
+@otel_tracer_obj.tracer.start_as_current_span('get_user_address')
 def get_user_address(mysqlclientObj):
     try:
         user_id = int(request.args.get('userId'))
@@ -143,9 +150,10 @@ def get_user_address(mysqlclientObj):
 
         return (json.dumps(address_info), 200, {'Content-Type': 'application/json'})
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
 
 
+@otel_tracer_obj.tracer.start_as_current_span('verify_user')
 def verify_user(mysqlclientObj):
     try:
         data = request.get_json(force=True)
@@ -169,7 +177,7 @@ def verify_user(mysqlclientObj):
         return ('User Verified', 200, {})
         
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return ('Internal Server Error', 500, {})
 
 
@@ -184,7 +192,7 @@ def main():
     }
 
     users_service_obj = FlaskService(
-        'demo-eshop-users-service', SQL_FILE, backend_db_info)
+        APP_NAME, SQL_FILE, backend_db_info)
     
     # users_service_obj.mysqlclient.setConnection()
 
@@ -214,7 +222,7 @@ def main():
         endpoint='/users-service-internal/getUserAddress',
         endpoint_name='getUserAddress',
         handler=get_user_address)
-
+    
     users_service_obj.run("0.0.0.0", 8080)
 
 

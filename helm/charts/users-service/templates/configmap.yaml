@@ -6,3 +6,4 @@ data:
   mysql_endpoint: "ecomm-rds-cluster.cluster-cpc4aos0m4ie.us-west-2.rds.amazonaws.com"
   mysql_db_name: "users"
   mysql_user: "admin_user"
+  otel_collector_endpoint: "ecomm-opentelemetry-collector.observability.svc.cluster.local"
