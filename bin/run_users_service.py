@@ -7,6 +7,7 @@ import uuid
 from flask import request
 from src.flask_service import FlaskService
 from src.otel_tracer import OtelTracer
+import opentelemetry
 
 
 logging.basicConfig(
@@ -21,6 +22,8 @@ SQL_FILE = 'sql/user_schema.sql'
 APP_NAME = 'demo-eshop-users-service'
 
 otel_tracer_obj = OtelTracer(APP_NAME)
+
+tracer = opentelemetry.trace.get_tracer(__name__)  #this is for global tracing
 
 
 @otel_tracer_obj.tracer.start_as_current_span('register_user_action')
@@ -153,7 +156,7 @@ def get_user_address(mysqlclientObj):
         logger.error(e)
 
 
-@otel_tracer_obj.tracer.start_as_current_span('verify_user')
+@tracer.start_as_current_span('verify_user')
 def verify_user(mysqlclientObj):
     try:
         data = request.get_json(force=True)

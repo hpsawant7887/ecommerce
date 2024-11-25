@@ -1,4 +1,7 @@
 import pymysql
+import opentelemetry
+
+tracer = opentelemetry.trace.get_tracer(__name__)
 
 
 def database_exists(server, port, db_name, user, password):
@@ -57,6 +60,7 @@ class MySQLClient:
 
         self.connection = conn
 
+    @tracer.start_as_current_span('mysql_query')
     def executeQuery(self, query):
         with self.connection.cursor() as cursor:
             cursor.execute(query)
