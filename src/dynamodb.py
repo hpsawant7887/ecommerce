@@ -2,10 +2,13 @@ import os
 import json
 import boto3
 import logging
+import opentelemetry.trace
 
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
+
+tracer = opentelemetry.trace.get_tracer(__name__)
 
 class DynamoDBClient:
     def __init__(self):
@@ -33,7 +36,8 @@ class DynamoDBClient:
         self.dynamodb_client = session.client('dynamodb')
         self.dynamodb_res = session.resource('dynamodb')
 
-
+    
+    @tracer.start_as_current_span('create_dynamodb_item')
     def create_dynamodb_item(self, dynamo_table, ddb_item):
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)
@@ -50,6 +54,7 @@ class DynamoDBClient:
             raise RuntimeError("Failed to enter item into Dynamo Table {} {}".format(dynamo_table, error))
 
 
+    @tracer.start_as_current_span('update_dynamodb_item')
     def update_dynamodb_item(self, dynamo_table, Key, UpdateExpression, ExpressionAttributeValues=None, ExpressionAttributeNames=None, ConditionExpression=None):
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)
@@ -85,7 +90,8 @@ class DynamoDBClient:
                logger = logging.getLogger(__name__)
                raise RuntimeError("Failed to update Dynamo Table {}".format(dynamo_table))
 
-
+    
+    @tracer.start_as_current_span('delete_dynamodb_item')
     def delete_dynamodb_item(self, dynamo_table, Key):
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)
@@ -97,6 +103,7 @@ class DynamoDBClient:
                 raise RuntimeError("Failed to delete Dynamo Key {} {}".format(Key, error))
 
     
+    @tracer.start_as_current_span('get_dynamodb_item')
     def get_dynamodb_item(self, dynamo_table, Key):
         try:
             ddb_table = self.dynamodb_res.Table(dynamo_table)

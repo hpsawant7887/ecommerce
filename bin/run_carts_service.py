@@ -11,8 +11,10 @@ from src.flask_service_v2 import FlaskServiceV2
 from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
 from src.dynamodb import DynamoDBClient
+from src.otel_tracer import OtelTracer
 from src.utils import DecimalEncoder
 from time import sleep
+
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -22,6 +24,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+APP_NAME = 'demo-eshop-carts-service'
+
+otel_tracer_obj = OtelTracer(APP_NAME)
 
 def get_unique_cart_id():
     return uuid.uuid4().hex
@@ -66,6 +71,7 @@ def verify_auth_header(func):
 
     return wrapper
 
+@otel_tracer_obj.tracer.start_as_current_span('create_cart')
 @verify_auth_header
 def create_cart(**kwargs):
     if request.method != 'POST':
@@ -103,6 +109,8 @@ def create_cart(**kwargs):
         logger.error(e)
         return ('Internal Server Error', 500, {})
 
+
+@otel_tracer_obj.tracer.start_as_current_span('get_cart')
 @verify_auth_header
 def get_cart(**kwargs):
     if request.method != 'GET':
@@ -134,6 +142,7 @@ def get_cart(**kwargs):
         return ('Internal Server Error', 500, {})
 
 
+@otel_tracer_obj.tracer.start_as_current_span('addToCart')
 @verify_auth_header
 def addToCart(**kwargs):
     if request.method != 'PUT':
@@ -178,6 +187,7 @@ def addToCart(**kwargs):
         return ('Internal Server Error', 500, {})
 
 
+@otel_tracer_obj.tracer.start_as_current_span('removeFromCart')
 @verify_auth_header
 def removeFromCart(**kwargs):
     try:
@@ -217,6 +227,7 @@ def removeFromCart(**kwargs):
         return ('Internal Server Error', 500, {})
 
 
+@otel_tracer_obj.tracer.start_as_current_span('deleteCart')
 @verify_auth_header
 def deleteCart(**kwargs):
     try:

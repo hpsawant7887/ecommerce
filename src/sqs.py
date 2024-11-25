@@ -1,7 +1,9 @@
 import os
 import json
 import boto3
+import opentelemetry.trace
 
+tracer = opentelemetry.trace.get_tracer(__name__)
 
 class SqsClient:
     def __init__(self):
@@ -26,13 +28,17 @@ class SqsClient:
         self.sqs_client = session.client('sqs', endpoint_url=endpoint_url)
 
 
+    @tracer.start_as_current_span('read_sqs_msg')
     def read_sqs_msg(self, sqs_queue_url):
         return self.sqs_client.receive_message(QueueUrl=sqs_queue_url, WaitTimeSeconds=5, MaxNumberOfMessages=10)
     
-
+    
+    @tracer.start_as_current_span('send_sqs_msg')
     def send_sqs_msg(self, sqs_queue_url, message):
         self.sqs_client.send_message(QueueUrl=sqs_queue_url, MessageBody=message)
 
+
+    @tracer.start_as_current_span('delete_sqs_msg')
     def delete_sqs_msg(self, sqs_queue_url, sqs_message_receipt):
         self.sqs_client.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=sqs_message_receipt)
 
