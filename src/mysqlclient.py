@@ -1,5 +1,5 @@
 import pymysql
-import opentelemetry
+import opentelemetry.trace
 
 tracer = opentelemetry.trace.get_tracer(__name__)
 

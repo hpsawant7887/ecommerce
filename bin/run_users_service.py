@@ -7,7 +7,7 @@ import uuid
 from flask import request
 from src.flask_service import FlaskService
 from src.otel_tracer import OtelTracer
-import opentelemetry
+import opentelemetry.trace
 
 
 logging.basicConfig(
