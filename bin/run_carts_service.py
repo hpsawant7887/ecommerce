@@ -14,19 +14,15 @@ from src.dynamodb import DynamoDBClient
 from src.otel_tracer import OtelTracer
 from src.utils import DecimalEncoder
 from time import sleep
+from src.ecommerce_logger import set_logger
 
-
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-logger = logging.getLogger(__name__)
 
 APP_NAME = 'demo-eshop-carts-service'
 
 otel_tracer_obj = OtelTracer(APP_NAME)
+
+logger = set_logger()
+
 
 def get_unique_cart_id():
     return uuid.uuid4().hex
