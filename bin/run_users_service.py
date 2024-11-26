@@ -3,20 +3,15 @@ import hashlib
 import json
 import logging
 import uuid
+import opentelemetry.trace
 
 from flask import request
 from src.flask_service import FlaskService
 from src.otel_tracer import OtelTracer
-import opentelemetry.trace
+from src.ecommerce_logger import set_logger
 
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-logger = logging.getLogger(__name__)
+logger = set_logger()
 
 SQL_FILE = 'sql/user_schema.sql'
 APP_NAME = 'demo-eshop-users-service'
@@ -28,12 +23,16 @@ tracer = opentelemetry.trace.get_tracer(__name__)  #this is for global tracing
 
 @otel_tracer_obj.tracer.start_as_current_span('register_user_action')
 def register_user_action(mysqlclientObj):
+    logger.info('request_url is {}'.format(request.url))
+
     if request.method != 'POST':
+        logger.error('Incorrect Method {}'.format(request.method))
         # return error
         return ('Invalid method', 400, {})
 
     try:
         data = request.get_json(force=True)
+        logger.info(data)
 
         if not data:
             return ('Invalid Request Body', 400, {})
@@ -113,6 +112,8 @@ def verify_auth_header(func):
 @otel_tracer_obj.tracer.start_as_current_span('get_user_info')
 @verify_auth_header
 def get_user_info(mysqlclientObj):
+    logger.info('request_url is {}'.format(request.url))
+
     user_info_query = "SELECT user_id, username, first_name, last_name, email, user_address from users.user_info WHERE username='{}'".format(
         request.authorization.username)
 

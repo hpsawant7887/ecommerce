@@ -33,6 +33,7 @@ COPY src/__init__.py /opt/users_service/src/
 COPY sql/user_schema.sql /opt/users_service/sql/
 #COPY test/test_users.py /opt/users_service/test/
 COPY src/otel_tracer.py /opt/users_service/src/
+COPY src/ecommerce_logger.py /opt/users_service/src/
 
 # Install dependencies
 RUN pip install setuptools
