@@ -14,6 +14,7 @@ from src.sqs import SqsClient
 from src.utils import DecimalEncoder
 from time import sleep
 from src.ecommerce_logger import set_logger
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 APP_NAME = 'demo-eshop-ordering-service'
@@ -239,6 +240,8 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_SHIPPING_TO_ORDERING']
 
     ordering_service_obj = FlaskServiceV2(APP_NAME)
+
+    metrics = PrometheusMetrics(ordering_service_obj.service)
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, ordering_service_obj,))
     t1.start()

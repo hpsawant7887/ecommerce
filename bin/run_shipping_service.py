@@ -14,6 +14,7 @@ from time import sleep
 from src.k8s_utils import get_service_endpoint
 from src.utils import DecimalEncoder
 from src.ecommerce_logger import set_logger
+from prometheus_flask_exporter import PrometheusMetrics
 
 SQL_FILE = 'sql/shipping_schema.sql'
 APP_NAME = 'demo-eshop-shipping-service'
@@ -232,6 +233,8 @@ def main():
 
     shipping_service_obj = FlaskService(
         APP_NAME, SQL_FILE, backend_db_info)
+    
+    metrics = PrometheusMetrics(shipping_service_obj.service)
     
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, shipping_service_obj,))
     t1.start()

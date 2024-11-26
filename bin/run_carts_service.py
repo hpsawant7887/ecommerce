@@ -15,6 +15,7 @@ from src.otel_tracer import OtelTracer
 from src.utils import DecimalEncoder
 from time import sleep
 from src.ecommerce_logger import set_logger
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 APP_NAME = 'demo-eshop-carts-service'
@@ -318,6 +319,7 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_CARTS']
 
     cart_service_obj = FlaskServiceV2('demo-eshop-carts-service')
+    metrics = PrometheusMetrics(cart_service_obj.service)
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, cart_service_obj,))
     t1.start()

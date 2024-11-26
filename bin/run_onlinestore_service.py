@@ -16,6 +16,7 @@ from src.otel_tracer import OtelTracer
 from time import sleep
 from src.k8s_utils import get_service_endpoint
 from src.ecommerce_logger import set_logger
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 APP_NAME = 'demo-eshop-online-store-service'
@@ -255,6 +256,8 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE']
 
     onlinestore_service_obj = FlaskService(APP_NAME, SQL_FILE, backend_db_info)
+
+    metrics = PrometheusMetrics(onlinestore_service_obj.service)
 
     #onlinestore_service_obj.mysqlclient.setConnection()
 

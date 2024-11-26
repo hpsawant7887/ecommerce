@@ -9,6 +9,7 @@ from flask import request
 from src.flask_service import FlaskService
 from src.otel_tracer import OtelTracer
 from src.ecommerce_logger import set_logger
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 SQL_FILE = 'sql/user_schema.sql'
@@ -197,6 +198,8 @@ def main():
 
     users_service_obj = FlaskService(
         APP_NAME, SQL_FILE, backend_db_info)
+    
+    metrics = PrometheusMetrics(users_service_obj.service)
     
     # users_service_obj.mysqlclient.setConnection()
 

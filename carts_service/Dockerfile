@@ -49,6 +49,7 @@ RUN pip install opentelemetry-sdk
 RUN pip install opentelemetry-exporter-otlp-proto-grpc
 RUN pip install opentelemetry-exporter-otlp-proto-http
 RUN pip install opentelemetry-instrumentation-logging
+RUN pip install prometheus_client prometheus_flask_exporter
 
 # Setup the Users Service
 RUN python3 setup.py install carts_service
