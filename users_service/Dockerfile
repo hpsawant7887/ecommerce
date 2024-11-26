@@ -44,6 +44,7 @@ RUN pip install opentelemetry-api
 RUN pip install opentelemetry-sdk
 RUN pip install opentelemetry-exporter-otlp-proto-grpc
 RUN pip install opentelemetry-exporter-otlp-proto-http
+RUN pip install opentelemetry-instrumentation-logging
 
 # Setup the Users Service
 RUN python3 setup.py install users_service
