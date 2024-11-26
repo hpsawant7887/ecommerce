@@ -2,8 +2,8 @@ apiVersion: v2
 name: shipping-service
 description: A Helm chart for shipping-service
 type: application
-version: 1.0.1
-appVersion: 1.1.0
+version: 1.0.2
+appVersion: 1.1.1
 maintainers:
   - name: hpsawant
     email: hpsawant2013@gmail.com
