@@ -1,5 +1,5 @@
 import logging
-from opentelemetry.instrumentation.logging import OpenTelemetryLogEmitter
+# from opentelemetry.instrumentation.logging import OpenTelemetryLogEmitter
 
 class OptionalFieldFormatter(logging.Formatter):
     def format(self, record):
