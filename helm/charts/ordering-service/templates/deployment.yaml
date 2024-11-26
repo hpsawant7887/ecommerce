@@ -62,6 +62,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "ordering-service.fullname" . }}-configmap
                   key: sqs_vpc_endpoint_url
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "ordering-service.fullname" . }}-configmap
+                  key: otel_collector_endpoint
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

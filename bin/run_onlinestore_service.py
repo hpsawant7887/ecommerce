@@ -6,23 +6,24 @@ import logging
 
 import uuid
 import requests
+import opentelemetry.trace
 
 from flask import request
 from src.flask_service import FlaskService
 from src.sqs import SqsClient
 from src.utils import DecimalEncoder
+from src.otel_tracer import OtelTracer
 from time import sleep
 from src.k8s_utils import get_service_endpoint
+from src.ecommerce_logger import set_logger
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 
-logger = logging.getLogger(__name__)
-
+APP_NAME = 'demo-eshop-online-store-service'
 SQL_FILE = 'sql/onlinestore_schema.sql'
+
+otel_tracer_obj = OtelTracer(APP_NAME)
+tracer = opentelemetry.trace.get_tracer(__name__)  #this is for global tracing
+logger = set_logger()
 
 
 def start_sqs_listener(sqs_queue_url, onlinestore_service_obj):
@@ -117,7 +118,7 @@ def verify_auth_header(func):
 
     return wrapper
 
-
+@otel_tracer_obj.tracer.start_as_current_span('get_product')
 @verify_auth_header
 def get_product(**kwargs):
     if request.method != 'GET':
@@ -143,7 +144,8 @@ def get_product(**kwargs):
 
     return (json.dumps(product_info, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
-    
+
+@otel_tracer_obj.tracer.start_as_current_span('search_products')    
 @verify_auth_header
 def search_products(**kwargs):
     if request.method != 'GET':
@@ -173,7 +175,7 @@ def search_products(**kwargs):
 
     return (json.dumps(products, cls=DecimalEncoder), 200, {'Content-Type': 'application/json'})
 
-
+@otel_tracer_obj.tracer.start_as_current_span('add_product')
 def add_product(**kwargs):
     try:
         if request.method != 'POST':
@@ -217,6 +219,7 @@ def increase_product_count(**kwargs):
     pass
 
 
+@tracer.start_as_current_span('decrease_product_count') 
 def decrease_product_count(**kwargs):
     product_id = int(kwargs['product_id'])
     ordered_quantity = int(kwargs['quantity'])
@@ -251,7 +254,7 @@ def main():
 
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_ONLINE_STORE']
 
-    onlinestore_service_obj = FlaskService('demo-eshop-online-store-service', SQL_FILE, backend_db_info)
+    onlinestore_service_obj = FlaskService(APP_NAME, SQL_FILE, backend_db_info)
 
     #onlinestore_service_obj.mysqlclient.setConnection()
 

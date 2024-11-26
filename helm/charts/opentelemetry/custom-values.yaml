@@ -2,7 +2,7 @@ mode: daemonset
 
 service:
   enabled: true
-
+  
 ports:
   metrics:
     enabled: true
@@ -121,7 +121,7 @@ config:
       endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/otlp
     loki: 
       endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/loki/api/v1/push 
-    otlp/honeycombtraces:
+    otlp:
       endpoint: api.honeycomb.io:443
       headers:
         x-honeycomb-team: hcaik_01j737pkpnce9x3ndwkrag11qc0h5s4vtv4ngtemab4mjbyejz13spjbbf
@@ -134,11 +134,11 @@ config:
       metrics:
         receivers: [otlp]
         processors: [batch]
-        exporters: [prometheus]
+        exporters: [prometheus, debug]
       traces:
         receivers: [otlp]
         processors: [batch]
-        exporters: [otlp/honeycombtraces]
+        exporters: [otlp, debug]
 
 
     

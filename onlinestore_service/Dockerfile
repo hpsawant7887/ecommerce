@@ -35,6 +35,8 @@ COPY src/k8s_utils.py /opt/onlinestore_service/src/
 COPY src/utils.py /opt/onlinestore_service/src/
 COPY sql/onlinestore_schema.sql /opt/onlinestore_service/sql/
 #COPY test/test_users.py /opt/users_service/test/
+COPY src/otel_tracer.py /opt/onlinestore_service/src/
+COPY src/ecommerce_logger.py /opt/onlinestore_service/src/
 
 # Install dependencies
 RUN pip install setuptools
@@ -44,6 +46,11 @@ RUN pip install flask
 RUN pip install boto3
 RUN pip install requests
 RUN pip install kubernetes
+RUN pip install opentelemetry-api
+RUN pip install opentelemetry-sdk
+RUN pip install opentelemetry-exporter-otlp-proto-grpc
+RUN pip install opentelemetry-exporter-otlp-proto-http
+RUN pip install opentelemetry-instrumentation-logging
 
 # Setup the Users Service
 RUN python3 setup.py install onlinestore_service

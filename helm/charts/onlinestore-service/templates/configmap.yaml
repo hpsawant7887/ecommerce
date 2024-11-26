@@ -9,3 +9,4 @@ data:
   # mysql_auth_db_name: "users"
   sqs_queue_url_ordering_to_onlinestore: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-onlinestore"
   sqs_vpc_endpoint_url: "https://sqs.us-west-2.amazonaws.com"
+  otel_collector_endpoint: "http://ecomm-opentelemetry-collector.observability.svc.cluster.local:4318"

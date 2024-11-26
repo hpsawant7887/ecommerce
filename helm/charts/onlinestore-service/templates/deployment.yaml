@@ -74,6 +74,11 @@ spec:
                 secretKeyRef:
                   name: demo-eshop-users-secret
                   key: mysql-password
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "onlinestore-service.fullname" . }}-configmap
+                  key: otel_collector_endpoint
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

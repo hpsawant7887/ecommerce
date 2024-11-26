@@ -8,21 +8,18 @@ import requests
 
 from flask import request
 from src.flask_service import FlaskService
+from src.otel_tracer import OtelTracer
 from src.sqs import SqsClient
 from time import sleep
 from src.k8s_utils import get_service_endpoint
 from src.utils import DecimalEncoder
+from src.ecommerce_logger import set_logger
 
 SQL_FILE = 'sql/shipping_schema.sql'
+APP_NAME = 'demo-eshop-shipping-service'
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-logger = logging.getLogger(__name__)
-
+otel_tracer_obj = OtelTracer(APP_NAME)
+logger = set_logger()
 
 def health_check(**kwargs):
     if request.method != 'GET':
@@ -39,6 +36,7 @@ def get_unique_shipment_id():
     return uuid.uuid4().int
 
 
+@otel_tracer_obj.tracer.start_as_current_span('create_shipment')
 def create_shipment(**kwargs):
     try:
         shipment_id = get_unique_shipment_id()
@@ -70,6 +68,7 @@ def create_shipment(**kwargs):
         return False
 
 
+@otel_tracer_obj.tracer.start_as_current_span('update_shipment')
 def update_shipment(**kwargs):
     try:
         if request.method != 'PUT':
@@ -123,6 +122,7 @@ def update_shipment(**kwargs):
 
 
 
+@otel_tracer_obj.tracer.start_as_current_span('get_shipment_info')
 def get_shipment_info(**kwargs):
     try:
         if request.method != 'GET':
@@ -153,6 +153,7 @@ def get_shipment_info(**kwargs):
         return ('Internal Server Error', 500, {})
     
 
+@otel_tracer_obj.tracer.start_as_current_span('get_all_shipments')
 def get_all_shipments(**kwargs):
     try:
         if request.method != 'GET':
@@ -230,7 +231,7 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_SHIPPING']
 
     shipping_service_obj = FlaskService(
-        'demo-eshop-shipping-service', SQL_FILE, backend_db_info)
+        APP_NAME, SQL_FILE, backend_db_info)
     
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, shipping_service_obj,))
     t1.start()

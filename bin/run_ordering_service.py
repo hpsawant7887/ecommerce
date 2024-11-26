@@ -8,18 +8,19 @@ import requests
 
 from flask import request
 from src.flask_service_v2 import FlaskServiceV2
+from src.otel_tracer import OtelTracer
 from src.k8s_utils import get_service_endpoint
 from src.sqs import SqsClient
 from src.utils import DecimalEncoder
 from time import sleep
+from src.ecommerce_logger import set_logger
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 
-logger = logging.getLogger(__name__)
+APP_NAME = 'demo-eshop-ordering-service'
+
+otel_tracer_obj = OtelTracer(APP_NAME)
+
+logger = set_logger()
 
 
 def get_unique_order_id():
@@ -67,7 +68,7 @@ def verify_auth_header(func):
 
     return wrapper
 
-
+@otel_tracer_obj.tracer.start_as_current_span('placeOrder')
 @verify_auth_header
 def placeOrder(**kwargs):
     if request.method != "POST":
@@ -150,6 +151,7 @@ def updateOrderStatus(**kwargs):
     pass
 
 
+@otel_tracer_obj.tracer.start_as_current_span('getOrderStatus')
 @verify_auth_header
 def getOrderStatus(**kwargs):
     if request.method != "GET":
@@ -193,7 +195,7 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
 
             for sqs_message in sqs_messages['Messages']:
                 msg = json.loads(sqs_message['Body'])
-                
+                logger.info('SQS Message - {}'.format(msg))
 
                 if msg['type'] == "OrderShipped" or msg['type'] == "OrderDelivered":
                     order = {
@@ -236,7 +238,7 @@ def start_sqs_listener(sqs_queue_url, ordering_service_obj):
 def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_SHIPPING_TO_ORDERING']
 
-    ordering_service_obj = FlaskServiceV2('demo-eshop-ordering-service')
+    ordering_service_obj = FlaskServiceV2(APP_NAME)
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, ordering_service_obj,))
     t1.start()
