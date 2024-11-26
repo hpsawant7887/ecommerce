@@ -1,4 +1,5 @@
 import logging
+from opentelemetry.instrumentation.logging import OpenTelemetryLogEmitter
 
 class OptionalFieldFormatter(logging.Formatter):
     def format(self, record):
@@ -12,10 +13,10 @@ class OptionalFieldFormatter(logging.Formatter):
 
 def set_logger():
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     formatter = OptionalFieldFormatter('%(asctime)s - %(name)s - %(levelname)s - [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
     return logger

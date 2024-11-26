@@ -11,14 +11,14 @@ from src.otel_tracer import OtelTracer
 from src.ecommerce_logger import set_logger
 
 
-logger = set_logger()
-
 SQL_FILE = 'sql/user_schema.sql'
 APP_NAME = 'demo-eshop-users-service'
 
 otel_tracer_obj = OtelTracer(APP_NAME)
 
 tracer = opentelemetry.trace.get_tracer(__name__)  #this is for global tracing
+
+logger = set_logger()
 
 
 @otel_tracer_obj.tracer.start_as_current_span('register_user_action')
