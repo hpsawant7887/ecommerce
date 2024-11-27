@@ -16,12 +16,14 @@ from src.utils import DecimalEncoder
 from time import sleep
 from src.ecommerce_logger import set_logger
 from prometheus_flask_exporter import PrometheusMetrics
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
 
 APP_NAME = 'demo-eshop-carts-service'
 
 otel_tracer_obj = OtelTracer(APP_NAME)
 
+LoggingInstrumentor().instrument()
 logger = set_logger()
 
 
