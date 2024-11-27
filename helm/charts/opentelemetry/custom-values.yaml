@@ -39,27 +39,22 @@ config:
           scrape_interval: 10s
           static_configs:
           - targets: ['demo-eshop-users-service.users-service.svc.cluster.local:8080']
-            metrics_path: '/metrics'
         - job_name: 'onlinestore-service-flask-app'
           scrape_interval: 10s
           static_configs:
           - targets: ['demo-eshop-onlinestore-service.onlinestore-service.svc.cluster.local:8081']
-            metrics_path: '/metrics'
         - job_name: 'ordering-service-flask-app'
           scrape_interval: 10s
           static_configs:
           - targets: ['demo-eshop-ordering-service.ordering-service.svc.cluster.local:8083']
-            metrics_path: '/metrics'
         - job_name: 'carts-service-flask-app'
           scrape_interval: 10s
           static_configs:
           - targets: ['demo-eshop-carts-service.carts-service.svc.cluster.local:8082']
-            metrics_path: '/metrics'
         - job_name: 'shipping-service-flask-app'
           scrape_interval: 10s
           static_configs:
           - targets: ['demo-eshop-shipping-service.shipping-service.svc.cluster.local:8084']
-            metrics_path: '/metrics'
           
     filelog:
       include:
@@ -146,28 +141,33 @@ config:
       verbosity: detailed
     prometheus:
       endpoint: "0.0.0.0:9090"
+    # prometheus/B:
+    #   endpoint: "localhost:9090"
     otlphttp/loki:
       endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/otlp
     loki: 
       endpoint: http://ecomm-grafana-loki-gateway.observability.svc.cluster.local/loki/api/v1/push 
-    otlp:
+    otlp/A:
       endpoint: api.honeycomb.io:443
       headers:
         x-honeycomb-team: hcaik_01j737pkpnce9x3ndwkrag11qc0h5s4vtv4ngtemab4mjbyejz13spjbbf
+    # otlp/B:
+    #   endpoint: "0.0.0.0:4317"
+    
   service:
     pipelines:
       logs:
-        receivers: [filelog,otlp]
+        receivers: [filelog, otlp]
         processors: [batch, resource]
         exporters: [loki]
       metrics:
-        receivers: [otlp]
+        receivers: [otlp, prometheus]
         processors: [batch]
         exporters: [prometheus, debug]
       traces:
         receivers: [otlp]
         processors: [batch]
-        exporters: [otlp, debug]
+        exporters: [otlp/A, debug]
 
 
     

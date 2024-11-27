@@ -17,10 +17,20 @@ server:
   statefulSet:
     enabled: true
 
-serverFiles:
-  prometheus.yml:
-    scrape_configs:
+# serverFiles:
+#   prometheus.yml:
+#     scrape_configs:
+#       - targets:
+#         - ecomm-opentelemetry-collector.observability.svc.cluster.local:9090
+
+extraScrapeConfigs: |
+  - job_name: opentelemetry-collector
+    static_configs:
       - targets:
         - ecomm-opentelemetry-collector.observability.svc.cluster.local:9090
+    metrics_path: /metrics
+
+
+
 
 
