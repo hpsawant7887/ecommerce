@@ -319,7 +319,7 @@ def main():
     sqs_queue_url = os.environ['SQS_QUEUE_URL_ORDERING_TO_CARTS']
 
     cart_service_obj = FlaskServiceV2('demo-eshop-carts-service')
-    metrics = PrometheusMetrics(cart_service_obj.service)
+    metrics = PrometheusMetrics(cart_service_obj.service, default_labels={ 'service': APP_NAME })
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, cart_service_obj,))
     t1.start()

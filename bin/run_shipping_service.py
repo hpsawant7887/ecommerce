@@ -234,7 +234,7 @@ def main():
     shipping_service_obj = FlaskService(
         APP_NAME, SQL_FILE, backend_db_info)
     
-    metrics = PrometheusMetrics(shipping_service_obj.service)
+    metrics = PrometheusMetrics(shipping_service_obj.service, default_labels={ 'service': APP_NAME })
     
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, shipping_service_obj,))
     t1.start()

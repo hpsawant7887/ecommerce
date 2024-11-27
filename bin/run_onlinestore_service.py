@@ -257,7 +257,7 @@ def main():
 
     onlinestore_service_obj = FlaskService(APP_NAME, SQL_FILE, backend_db_info)
 
-    metrics = PrometheusMetrics(onlinestore_service_obj.service)
+    metrics = PrometheusMetrics(onlinestore_service_obj.service, default_labels={ 'service': APP_NAME })
 
     #onlinestore_service_obj.mysqlclient.setConnection()
 

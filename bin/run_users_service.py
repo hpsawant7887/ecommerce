@@ -199,7 +199,7 @@ def main():
     users_service_obj = FlaskService(
         APP_NAME, SQL_FILE, backend_db_info)
     
-    metrics = PrometheusMetrics(users_service_obj.service)
+    metrics = PrometheusMetrics(users_service_obj.service, default_labels={ 'service': APP_NAME })
     
     # users_service_obj.mysqlclient.setConnection()
 

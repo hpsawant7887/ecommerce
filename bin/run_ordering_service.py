@@ -241,7 +241,7 @@ def main():
 
     ordering_service_obj = FlaskServiceV2(APP_NAME)
 
-    metrics = PrometheusMetrics(ordering_service_obj.service)
+    metrics = PrometheusMetrics(ordering_service_obj.service, default_labels={ 'service': APP_NAME })
 
     t1 = threading.Thread(target=start_sqs_listener, args=(sqs_queue_url, ordering_service_obj,))
     t1.start()
