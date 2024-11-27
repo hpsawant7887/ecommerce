@@ -5,4 +5,5 @@ metadata:
 data:
   sqs_queue_url_ordering_to_carts: "https://sqs.us-west-2.amazonaws.com/507326814593/ordering-to-carts"
   sqs_vpc_endpoint_url: "https://sqs.us-west-2.amazonaws.com"
-  otel_collector_endpoint: "http://ecomm-opentelemetry-collector.observability.svc.cluster.local:4318"
+  otel_collector_endpoint: "http://ecomm-opentelemetry-collector.observability.svc.cluster.local:4318/v1/traces"
+  otel_service_name: carts-service

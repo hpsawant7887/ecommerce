@@ -79,6 +79,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "shipping-service.fullname" . }}-configmap
                   key: otel_collector_endpoint
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "shipping-service.fullname" . }}-configmap
+                  key: otel_service_name
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
