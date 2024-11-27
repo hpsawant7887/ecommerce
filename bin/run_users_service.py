@@ -10,6 +10,7 @@ from src.flask_service import FlaskService
 from src.otel_tracer import OtelTracer
 from src.ecommerce_logger import set_logger
 from prometheus_flask_exporter import PrometheusMetrics
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
 
 SQL_FILE = 'sql/user_schema.sql'
@@ -19,6 +20,7 @@ otel_tracer_obj = OtelTracer(APP_NAME)
 
 tracer = opentelemetry.trace.get_tracer(__name__)  #this is for global tracing
 
+LoggingInstrumentor().instrument()
 logger = set_logger()
 
 
