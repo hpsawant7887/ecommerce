@@ -1,6 +1,10 @@
+
 from time import sleep
 from flask import Flask, make_response
 from src.mysqlclient import MySQLClient, database_exists, create_schema
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+LoggingInstrumentor().instrument(set_logging_format=True)
 
 
 class EndpointHandler(object):

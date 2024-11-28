@@ -3,7 +3,11 @@ import json
 import boto3
 import opentelemetry.trace
 
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
 tracer = opentelemetry.trace.get_tracer(__name__)
+
+LoggingInstrumentor().instrument(set_logging_format=True)
 
 class SqsClient:
     def __init__(self):

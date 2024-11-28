@@ -1,7 +1,9 @@
 from time import sleep
 from flask import Flask, make_response
 from src.dynamodb import DynamoDBClient
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
+LoggingInstrumentor().instrument(set_logging_format=True)
 
 class EndpointHandler(object):
     def __init__(self, action, dynamodbclient=None):

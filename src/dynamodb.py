@@ -3,12 +3,13 @@ import json
 import boto3
 import logging
 import opentelemetry.trace
-
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger(__name__)
-
 tracer = opentelemetry.trace.get_tracer(__name__)
+
+LoggingInstrumentor().instrument(set_logging_format=True)
+
 
 class DynamoDBClient:
     def __init__(self):
