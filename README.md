@@ -30,7 +30,7 @@ $ terraform apply
 `workflows/build_and_push_docker_image.yaml`
 
 ## AWS STS
-Before running aws or kubectl or helm commands, export aws credentials to yur shell environment. The `aws_sts.sh` script will generate export commands that you can run.
+Before running aws or kubectl or helm commands, export aws credentials to your shell environment. The `aws_sts.sh` script will generate export commands that you can run.
 ```
 $./ecommerce/bin/aws_sts.sh
 Run following to export AWS sts creds to your shell env
